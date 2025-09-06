@@ -8,6 +8,9 @@
   NODE_ENV = "production"
   NETLIFY = "true"
 
+[functions]
+  node_bundler = "esbuild"
+
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"

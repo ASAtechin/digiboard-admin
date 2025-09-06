@@ -1,7 +1,7 @@
 const serverless = require('serverless-http');
 
-// Load the main server application
+// Import the main server app
 const app = require('../../server');
 
 // Export the serverless handler
-exports.handler = serverless(app);
+module.exports.handler = serverless(app);

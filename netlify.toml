@@ -8,6 +8,12 @@
   NODE_ENV = "production"
   NETLIFY = "true"
 
+# Handle all routes through the serverless function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"

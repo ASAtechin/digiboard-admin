@@ -1,13 +1,19 @@
 const serverless = require('serverless-http');
-const path = require('path');
 
-// Set NODE_PATH to help with module resolution
-process.env.NODE_PATH = process.env.NODE_PATH ? 
-  `${process.env.NODE_PATH}:${process.cwd()}` : 
-  process.cwd();
-
-// Require the main app from project root
+// Import the main server app
 const app = require('../../server.js');
 
-// Export handler
-exports.handler = serverless(app);
+// Create the serverless handler with proper configuration
+const handler = serverless(app, {
+  binary: false,
+  callbackWaitsForEmptyEventLoop: false
+});
+
+// Export the handler
+exports.handler = async (event, context) => {
+  // Set the context to not wait for empty event loop
+  context.callbackWaitsForEmptyEventLoop = false;
+  
+  // Call the serverless handler
+  return await handler(event, context);
+};

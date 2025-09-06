@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lectures - DigiBoard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                DigiBoard Admin
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/schedule">
+                            <i class="fas fa-calendar-alt me-1"></i>Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/lectures">
+                            <i class="fas fa-book me-1"></i>Lectures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/teachers">
+                            <i class="fas fa-users me-1"></i>Teachers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quick-update">
+                            <i class="fas fa-bolt me-1"></i>Quick Update
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            <%= user || 'Admin' %>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-book me-2 text-primary"></i>Lectures Management</h2>
+                        <p class="text-muted mb-0">Manage lecture schedules and details</p>
+                    </div>
+                    <div>
+                        <a href="/lectures/add" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add New Lecture
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control quick-search" 
+                           placeholder="Search lectures..." 
+                           data-target=".lecture-row">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="dayFilter">
+                    <option value="">All Days</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="text-end">
+                    <span class="text-muted">
+                        Total Lectures: <strong><%= lectures.length %></strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-none" id="bulkActionBtn">
+                    <form method="POST" action="/lectures/bulk-update" class="d-inline">
+                        <input type="hidden" name="lectureIds" id="selectedLectures">
+                        <div class="btn-group">
+                            <button type="submit" name="action" value="activate" class="btn btn-success btn-sm">
+                                <i class="fas fa-check me-1"></i>Activate Selected
+                            </button>
+                            <button type="submit" name="action" value="deactivate" class="btn btn-warning btn-sm">
+                                <i class="fas fa-pause me-1"></i>Deactivate Selected
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lectures Table -->
+        <div class="card">
+            <div class="card-body">
+                <% if (lectures.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th class="sortable">Subject</th>
+                                    <th class="sortable">Teacher</th>
+                                    <th class="sortable">Day</th>
+                                    <th class="sortable">Time</th>
+                                    <th>Classroom</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% lectures.forEach(function(lecture) { %>
+                                    <tr class="lecture-row" data-day="<%= lecture.dayOfWeek %>">
+                                        <td>
+                                            <input type="checkbox" 
+                                                   class="form-check-input lecture-checkbox" 
+                                                   value="<%= lecture._id %>">
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong><%= lecture.subject %></strong>
+                                                <% if (lecture.chapter) { %>
+                                                    <br><small class="text-muted">Chapter: <%= lecture.chapter %></small>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <% if (lecture.teacher) { %>
+                                                <div>
+                                                    <strong><%= lecture.teacher.name %></strong>
+                                                    <br><small class="text-muted"><%= lecture.teacher.department %></small>
+                                                </div>
+                                            <% } else { %>
+                                                <span class="text-muted">TBA</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info"><%= lecture.dayOfWeek %></span>
+                                        </td>
+                                        <td>
+                                            <div class="lecture-time">
+                                                <%= moment(lecture.startTime).format('h:mm A') %> - 
+                                                <%= moment(lecture.endTime).format('h:mm A') %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            <%= lecture.classroom %>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<%= lecture.lectureType === 'Lab' ? 'warning' : lecture.lectureType === 'Tutorial' ? 'info' : lecture.lectureType === 'Seminar' ? 'success' : 'primary' %>">
+                                                <%= lecture.lectureType %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% if (lecture.isActive) { %>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Active
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-pause-circle me-1"></i>Inactive
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="/lectures/edit/<%= lecture._id %>" 
+                                                   class="btn btn-outline-primary" 
+                                                   title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="POST" 
+                                                      action="/lectures/delete/<%= lecture._id %>" 
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Are you sure you want to delete this lecture?')">
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-danger btn-delete" 
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Lectures Found</h4>
+                        <p class="text-muted">Add your first lecture to get started</p>
+                        <a href="/lectures/add" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add First Lecture
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="text-center text-muted">
+                <small>&copy; <%= new Date().getFullYear() %> DigiBoard Admin Dashboard. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin.js"></script>
+    
+    <script>
+        // Day filter functionality
+        document.getElementById('dayFilter').addEventListener('change', function() {
+            const selectedDay = this.value;
+            const rows = document.querySelectorAll('.lecture-row');
+            
+            rows.forEach(function(row) {
+                if (selectedDay === '' || row.dataset.day === selectedDay) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Update bulk action form with selected lecture IDs
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('lecture-checkbox') || e.target.id === 'selectAll') {
+                const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                const lectureIds = Array.from(checkedBoxes).map(cb => cb.value);
+                document.getElementById('selectedLectures').value = lectureIds.join(',');
+            }
+        });
+    </script>
+</body>
+</html>

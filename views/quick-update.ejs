@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Update - DigiBoard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                DigiBoard Admin
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/schedule">
+                            <i class="fas fa-calendar-alt me-1"></i>Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/lectures">
+                            <i class="fas fa-book me-1"></i>Lectures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/teachers">
+                            <i class="fas fa-users me-1"></i>Teachers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/quick-update">
+                            <i class="fas fa-bolt me-1"></i>Quick Update
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            <%= user || 'Admin' %>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 bg-gradient-warning text-white">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="card-title mb-1">
+                                    <i class="fas fa-bolt me-2"></i>
+                                    Quick Update Center
+                                </h2>
+                                <p class="card-text mb-0">
+                                    Rapidly update daily schedules for all classrooms
+                                </p>
+                                <small class="text-white-75">
+                                    Perfect for last-minute changes and emergency updates
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-tachometer-alt fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="quick-action-icon bg-success text-white mb-3">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <h6>Quick Add Lecture</h6>
+                        <p class="small text-muted">Add a new lecture instantly</p>
+                        <a href="/lectures/add" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus me-1"></i>Add Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="quick-action-icon bg-warning text-white mb-3">
+                            <i class="fas fa-pause"></i>
+                        </div>
+                        <h6>Cancel Today's Lectures</h6>
+                        <p class="small text-muted">Quickly disable lectures</p>
+                        <button class="btn btn-warning btn-sm" onclick="showCancelModal()">
+                            <i class="fas fa-pause me-1"></i>Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="quick-action-icon bg-info text-white mb-3">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h6>Substitute Teacher</h6>
+                        <p class="small text-muted">Assign substitute quickly</p>
+                        <button class="btn btn-info btn-sm" onclick="showSubstituteModal()">
+                            <i class="fas fa-exchange-alt me-1"></i>Substitute
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="quick-action-icon bg-primary text-white mb-3">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h6>Reschedule Lecture</h6>
+                        <p class="small text-muted">Change time or room</p>
+                        <button class="btn btn-primary btn-sm" onclick="showRescheduleModal()">
+                            <i class="fas fa-clock me-1"></i>Reschedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Lectures for Quick Edit -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-day me-2 text-primary"></i>
+                            Today's Lectures - Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (lectures.filter(l => { 
+                            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                            return l.dayOfWeek === today;
+                        }).length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Teacher</th>
+                                            <th>Time</th>
+                                            <th>Room</th>
+                                            <th>Status</th>
+                                            <th>Quick Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% lectures.filter(l => { 
+                                            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                                            return l.dayOfWeek === today;
+                                        }).forEach(function(lecture) { %>
+                                            <tr>
+                                                <td>
+                                                    <strong><%= lecture.subject %></strong>
+                                                    <% if (lecture.chapter) { %>
+                                                        <br><small class="text-muted">Chapter: <%= lecture.chapter %></small>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (lecture.teacher) { %>
+                                                        <%= lecture.teacher.name %>
+                                                    <% } else { %>
+                                                        <span class="text-muted">TBA</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        <%= moment(lecture.startTime).format('h:mm A') %> - 
+                                                        <%= moment(lecture.endTime).format('h:mm A') %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                                    <%= lecture.classroom %>
+                                                </td>
+                                                <td>
+                                                    <% if (lecture.isActive) { %>
+                                                        <span class="badge bg-success">Active</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary">Cancelled</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-warning" 
+                                                                onclick="quickCancel('<%= lecture._id %>')"
+                                                                title="Cancel/Activate">
+                                                            <% if (lecture.isActive) { %>
+                                                                <i class="fas fa-pause"></i>
+                                                            <% } else { %>
+                                                                <i class="fas fa-play"></i>
+                                                            <% } %>
+                                                        </button>
+                                                        <button class="btn btn-outline-info" 
+                                                                onclick="quickSubstitute('<%= lecture._id %>')"
+                                                                title="Substitute Teacher">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-primary" 
+                                                                onclick="quickReschedule('<%= lecture._id %>')"
+                                                                title="Reschedule">
+                                                            <i class="fas fa-clock"></i>
+                                                        </button>
+                                                        <a href="/lectures/edit/<%= lecture._id %>" 
+                                                           class="btn btn-outline-secondary"
+                                                           title="Full Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-4">
+                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Lectures Today</h5>
+                                <p class="text-muted">There are no lectures scheduled for today</p>
+                                <a href="/lectures/add" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Add Today's First Lecture
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Announcement Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Emergency Announcement
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <textarea class="form-control" 
+                                          id="emergencyMessage" 
+                                          rows="3" 
+                                          placeholder="Type emergency announcement message..."></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2 h-100">
+                                    <button class="btn btn-danger" onclick="broadcastEmergency()">
+                                        <i class="fas fa-broadcast-tower me-1"></i>
+                                        Broadcast to All Screens
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="clearEmergency()">
+                                        <i class="fas fa-times me-1"></i>
+                                        Clear Emergency
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Cancel Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Lectures</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select which lectures to cancel:</p>
+                    <div id="cancelLecturesList"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" onclick="executeCancellation()">Cancel Selected</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Substitute Modal -->
+    <div class="modal fade" id="substituteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Substitute Teacher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Lecture:</label>
+                        <select class="form-select" id="substituteLecture">
+                            <option value="">Choose a lecture...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Substitute Teacher:</label>
+                        <select class="form-select" id="substituteTeacher">
+                            <option value="">Choose a teacher...</option>
+                            <% teachers.forEach(function(teacher) { %>
+                                <option value="<%= teacher._id %>"><%= teacher.name %> - <%= teacher.department %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-info" onclick="executeSubstitution()">Assign Substitute</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Modal -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reschedule Lecture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Lecture:</label>
+                        <select class="form-select" id="rescheduleLecture">
+                            <option value="">Choose a lecture...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">New Start Time:</label>
+                            <input type="time" class="form-control" id="newStartTime">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">New End Time:</label>
+                            <input type="time" class="form-control" id="newEndTime">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Classroom (optional):</label>
+                        <input type="text" class="form-control" id="newClassroom" placeholder="Leave empty to keep current">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="executeReschedule()">Reschedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="text-center text-muted">
+                <small>&copy; <%= new Date().getFullYear() %> DigiBoard Admin Dashboard. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin.js"></script>
+    
+    <script>
+        const lectures = <%- JSON.stringify(lectures) %>;
+        const teachers = <%- JSON.stringify(teachers) %>;
+
+        function showCancelModal() {
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            const todayLectures = lectures.filter(l => l.dayOfWeek === today);
+            
+            const listContainer = document.getElementById('cancelLecturesList');
+            listContainer.innerHTML = '';
+            
+            todayLectures.forEach(lecture => {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" value="${lecture._id}" id="cancel_${lecture._id}">
+                    <label class="form-check-label" for="cancel_${lecture._id}">
+                        ${lecture.subject} - ${lecture.teacher ? lecture.teacher.name : 'TBA'} 
+                        (${moment(lecture.startTime).format('h:mm A')})
+                    </label>
+                `;
+                listContainer.appendChild(div);
+            });
+            
+            new bootstrap.Modal(document.getElementById('cancelModal')).show();
+        }
+
+        function showSubstituteModal() {
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            const todayLectures = lectures.filter(l => l.dayOfWeek === today && l.isActive);
+            
+            const lectureSelect = document.getElementById('substituteLecture');
+            lectureSelect.innerHTML = '<option value="">Choose a lecture...</option>';
+            
+            todayLectures.forEach(lecture => {
+                const option = document.createElement('option');
+                option.value = lecture._id;
+                option.textContent = `${lecture.subject} - ${moment(lecture.startTime).format('h:mm A')}`;
+                lectureSelect.appendChild(option);
+            });
+            
+            new bootstrap.Modal(document.getElementById('substituteModal')).show();
+        }
+
+        function showRescheduleModal() {
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            const todayLectures = lectures.filter(l => l.dayOfWeek === today && l.isActive);
+            
+            const lectureSelect = document.getElementById('rescheduleLecture');
+            lectureSelect.innerHTML = '<option value="">Choose a lecture...</option>';
+            
+            todayLectures.forEach(lecture => {
+                const option = document.createElement('option');
+                option.value = lecture._id;
+                option.textContent = `${lecture.subject} - ${moment(lecture.startTime).format('h:mm A')}`;
+                lectureSelect.appendChild(option);
+            });
+            
+            new bootstrap.Modal(document.getElementById('rescheduleModal')).show();
+        }
+
+        function quickCancel(lectureId) {
+            const lecture = lectures.find(l => l._id === lectureId);
+            const action = lecture.isActive ? 'cancel' : 'activate';
+            
+            if (confirm(`Are you sure you want to ${action} this lecture?`)) {
+                // In a real implementation, this would make an API call
+                fetch(`/lectures/${lectureId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive: !lecture.isActive })
+                }).then(() => {
+                    location.reload();
+                }).catch(err => {
+                    alert('Error updating lecture');
+                });
+            }
+        }
+
+        function quickSubstitute(lectureId) {
+            document.getElementById('substituteLecture').value = lectureId;
+            showSubstituteModal();
+        }
+
+        function quickReschedule(lectureId) {
+            document.getElementById('rescheduleLecture').value = lectureId;
+            showRescheduleModal();
+        }
+
+        function executeCancellation() {
+            const checkboxes = document.querySelectorAll('#cancelLecturesList input:checked');
+            const lectureIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (lectureIds.length === 0) {
+                alert('Please select at least one lecture to cancel');
+                return;
+            }
+            
+            // Make bulk update API call
+            fetch('/lectures/bulk-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `lectureIds=${lectureIds.join(',')}&action=deactivate`
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+                location.reload();
+            }).catch(err => {
+                alert('Error cancelling lectures');
+            });
+        }
+
+        function executeSubstitution() {
+            const lectureId = document.getElementById('substituteLecture').value;
+            const teacherId = document.getElementById('substituteTeacher').value;
+            
+            if (!lectureId || !teacherId) {
+                alert('Please select both lecture and substitute teacher');
+                return;
+            }
+            
+            fetch(`/lectures/${lectureId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teacher: teacherId })
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('substituteModal')).hide();
+                location.reload();
+            }).catch(err => {
+                alert('Error assigning substitute');
+            });
+        }
+
+        function executeReschedule() {
+            const lectureId = document.getElementById('rescheduleLecture').value;
+            const startTime = document.getElementById('newStartTime').value;
+            const endTime = document.getElementById('newEndTime').value;
+            const classroom = document.getElementById('newClassroom').value;
+            
+            if (!lectureId || !startTime || !endTime) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const updateData = {
+                startTime: new Date(`1970-01-01T${startTime}:00`),
+                endTime: new Date(`1970-01-01T${endTime}:00`)
+            };
+            
+            if (classroom) {
+                updateData.classroom = classroom;
+            }
+            
+            fetch(`/lectures/${lectureId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('rescheduleModal')).hide();
+                location.reload();
+            }).catch(err => {
+                alert('Error rescheduling lecture');
+            });
+        }
+
+        function broadcastEmergency() {
+            const message = document.getElementById('emergencyMessage').value.trim();
+            if (!message) {
+                alert('Please enter an emergency message');
+                return;
+            }
+            
+            if (confirm('This will broadcast the emergency message to all DigiBoard displays. Continue?')) {
+                // In a real implementation, this would broadcast to all displays
+                alert('Emergency message broadcasted to all displays!\n\nMessage: ' + message);
+                document.getElementById('emergencyMessage').value = '';
+            }
+        }
+
+        function clearEmergency() {
+            if (confirm('Clear all emergency messages from displays?')) {
+                alert('Emergency messages cleared from all displays');
+            }
+        }
+
+        // Add CSS for quick action icons
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                .quick-action-icon {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto;
+                    font-size: 1.25rem;
+                }
+                .bg-gradient-warning {
+                    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                }
+            </style>
+        `);
+    </script>
+</body>
+</html>

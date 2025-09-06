@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= action %> Lecture - DigiBoard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                DigiBoard Admin
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/schedule">
+                            <i class="fas fa-calendar-alt me-1"></i>Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/lectures">
+                            <i class="fas fa-book me-1"></i>Lectures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/teachers">
+                            <i class="fas fa-users me-1"></i>Teachers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quick-update">
+                            <i class="fas fa-bolt me-1"></i>Quick Update
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            <%= user || 'Admin' %>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>
+                            <i class="fas fa-<%= action === 'Add' ? 'plus' : 'edit' %> me-2 text-primary"></i>
+                            <%= action %> Lecture
+                        </h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="/lectures">Lectures</a></li>
+                                <li class="breadcrumb-item active"><%= action %> Lecture</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div>
+                        <a href="/lectures" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Lectures
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lecture Form -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-book-open me-2"></i>
+                            Lecture Information
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <form method="POST" action="/lectures/save" id="lectureForm">
+                            <% if (lecture) { %>
+                                <input type="hidden" name="id" value="<%= lecture._id %>">
+                            <% } %>
+                            
+                            <!-- Basic Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Basic Information
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="subject" class="form-label">
+                                        <i class="fas fa-book me-1"></i>Subject *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="subject" 
+                                           name="subject" 
+                                           value="<%= lecture ? lecture.subject : '' %>" 
+                                           required
+                                           placeholder="Enter subject name">
+                                    <div class="invalid-feedback">Please provide a subject name.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="teacher" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Teacher *
+                                    </label>
+                                    <select class="form-select" 
+                                            id="teacher" 
+                                            name="teacher" 
+                                            required>
+                                        <option value="">Select a teacher</option>
+                                        <% teachers.forEach(function(teacher) { %>
+                                            <option value="<%= teacher._id %>" 
+                                                    <%= lecture && lecture.teacher && lecture.teacher._id === teacher._id ? 'selected' : '' %>>
+                                                <%= teacher.name %> - <%= teacher.department %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a teacher.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="classroom" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Classroom *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="classroom" 
+                                           name="classroom" 
+                                           value="<%= lecture ? lecture.classroom : '' %>" 
+                                           required
+                                           placeholder="e.g., Room 101">
+                                    <div class="invalid-feedback">Please provide a classroom.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="lectureType" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Lecture Type
+                                    </label>
+                                    <select class="form-select" 
+                                            id="lectureType" 
+                                            name="lectureType">
+                                        <option value="Lecture" <%= lecture && lecture.lectureType === 'Lecture' ? 'selected' : '' %>>Lecture</option>
+                                        <option value="Lab" <%= lecture && lecture.lectureType === 'Lab' ? 'selected' : '' %>>Lab</option>
+                                        <option value="Tutorial" <%= lecture && lecture.lectureType === 'Tutorial' ? 'selected' : '' %>>Tutorial</option>
+                                        <option value="Seminar" <%= lecture && lecture.lectureType === 'Seminar' ? 'selected' : '' %>>Seminar</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Schedule Information
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="dayOfWeek" class="form-label">
+                                        <i class="fas fa-calendar-day me-1"></i>Day of Week *
+                                    </label>
+                                    <select class="form-select" 
+                                            id="dayOfWeek" 
+                                            name="dayOfWeek" 
+                                            required>
+                                        <option value="">Select a day</option>
+                                        <option value="Monday" <%= lecture && lecture.dayOfWeek === 'Monday' ? 'selected' : '' %>>Monday</option>
+                                        <option value="Tuesday" <%= lecture && lecture.dayOfWeek === 'Tuesday' ? 'selected' : '' %>>Tuesday</option>
+                                        <option value="Wednesday" <%= lecture && lecture.dayOfWeek === 'Wednesday' ? 'selected' : '' %>>Wednesday</option>
+                                        <option value="Thursday" <%= lecture && lecture.dayOfWeek === 'Thursday' ? 'selected' : '' %>>Thursday</option>
+                                        <option value="Friday" <%= lecture && lecture.dayOfWeek === 'Friday' ? 'selected' : '' %>>Friday</option>
+                                        <option value="Saturday" <%= lecture && lecture.dayOfWeek === 'Saturday' ? 'selected' : '' %>>Saturday</option>
+                                        <option value="Sunday" <%= lecture && lecture.dayOfWeek === 'Sunday' ? 'selected' : '' %>>Sunday</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a day.</div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="startTime" class="form-label">
+                                        <i class="fas fa-clock me-1"></i>Start Time *
+                                    </label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="startTime" 
+                                           name="startTime" 
+                                           value="<%= lecture && lecture.startTime ? moment(lecture.startTime).format('HH:mm') : '' %>" 
+                                           required>
+                                    <div class="invalid-feedback">Please provide a start time.</div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="endTime" class="form-label">
+                                        <i class="fas fa-clock me-1"></i>End Time *
+                                    </label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="endTime" 
+                                           name="endTime" 
+                                           value="<%= lecture && lecture.endTime ? moment(lecture.endTime).format('HH:mm') : '' %>" 
+                                           required>
+                                    <div class="invalid-feedback">Please provide an end time.</div>
+                                </div>
+                            </div>
+
+                            <!-- Academic Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-graduation-cap me-1"></i>
+                                        Academic Information
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="course" class="form-label">
+                                        <i class="fas fa-book-reader me-1"></i>Course *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="course" 
+                                           name="course" 
+                                           value="<%= lecture ? lecture.course : '' %>" 
+                                           required
+                                           placeholder="e.g., Computer Science">
+                                    <div class="invalid-feedback">Please provide a course name.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="semester" class="form-label">
+                                        <i class="fas fa-calendar-alt me-1"></i>Semester *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="semester" 
+                                           name="semester" 
+                                           value="<%= lecture ? lecture.semester : '' %>" 
+                                           required
+                                           placeholder="e.g., Fall 2024">
+                                    <div class="invalid-feedback">Please provide a semester.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="chapter" class="form-label">
+                                        <i class="fas fa-bookmark me-1"></i>Current Chapter/Topic
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="chapter" 
+                                           name="chapter" 
+                                           value="<%= lecture ? lecture.chapter : '' %>" 
+                                           placeholder="e.g., Chapter 5: Data Structures">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="isActive" 
+                                               name="isActive" 
+                                               <%= lecture && lecture.isActive !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isActive">
+                                            <i class="fas fa-toggle-on me-1"></i>
+                                            Active Lecture
+                                        </label>
+                                        <div class="form-text">Inactive lectures won't appear in schedules</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="description" class="form-label">
+                                        <i class="fas fa-file-text me-1"></i>Description
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              name="description" 
+                                              rows="3" 
+                                              placeholder="Additional notes or description about this lecture"><%= lecture ? lecture.description : '' %></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a href="/lectures" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>
+                                            <%= action %> Lecture
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="text-center text-muted">
+                <small>&copy; <%= new Date().getFullYear() %> DigiBoard Admin Dashboard. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin.js"></script>
+    
+    <script>
+        // Form validation
+        document.getElementById('lectureForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            this.classList.add('was-validated');
+        });
+
+        // Time validation
+        document.getElementById('startTime').addEventListener('change', validateTimeRange);
+        document.getElementById('endTime').addEventListener('change', validateTimeRange);
+
+        function validateTimeRange() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const endTimeInput = document.getElementById('endTime');
+            
+            if (startTime && endTime) {
+                if (startTime >= endTime) {
+                    endTimeInput.setCustomValidity('End time must be after start time');
+                    endTimeInput.classList.add('is-invalid');
+                } else {
+                    endTimeInput.setCustomValidity('');
+                    endTimeInput.classList.remove('is-invalid');
+                    endTimeInput.classList.add('is-valid');
+                }
+            }
+        }
+
+        // Auto-fill semester based on current date
+        document.addEventListener('DOMContentLoaded', function() {
+            const semesterInput = document.getElementById('semester');
+            if (!semesterInput.value) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1; // 0-indexed
+                
+                let semester;
+                if (month >= 1 && month <= 5) {
+                    semester = `Spring ${year}`;
+                } else if (month >= 6 && month <= 8) {
+                    semester = `Summer ${year}`;
+                } else {
+                    semester = `Fall ${year}`;
+                }
+                
+                semesterInput.value = semester;
+            }
+        });
+
+        // Quick time presets
+        const timePresets = [
+            { label: '9:00 AM - 10:00 AM', start: '09:00', end: '10:00' },
+            { label: '10:00 AM - 11:00 AM', start: '10:00', end: '11:00' },
+            { label: '11:00 AM - 12:00 PM', start: '11:00', end: '12:00' },
+            { label: '1:00 PM - 2:00 PM', start: '13:00', end: '14:00' },
+            { label: '2:00 PM - 3:00 PM', start: '14:00', end: '15:00' },
+            { label: '3:00 PM - 4:00 PM', start: '15:00', end: '16:00' }
+        ];
+
+        // Add time preset buttons
+        const timePresetsDiv = document.createElement('div');
+        timePresetsDiv.className = 'mb-3';
+        timePresetsDiv.innerHTML = '<small class="text-muted">Quick Time Presets:</small><br>';
+        
+        timePresets.forEach(function(preset) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-outline-secondary btn-sm me-1 mb-1';
+            button.textContent = preset.label;
+            button.onclick = function() {
+                document.getElementById('startTime').value = preset.start;
+                document.getElementById('endTime').value = preset.end;
+                validateTimeRange();
+            };
+            timePresetsDiv.appendChild(button);
+        });
+
+        document.getElementById('endTime').parentNode.parentNode.appendChild(timePresetsDiv);
+    </script>
+</body>
+</html>

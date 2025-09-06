@@ -1,19 +1,37 @@
+const express = require('express');
 const serverless = require('serverless-http');
 
-// Import the main server app
-const app = require('../../server.js');
+// Create a simple Express app for testing
+const app = express();
 
-// Create the serverless handler with proper configuration
-const handler = serverless(app, {
-  binary: false,
-  callbackWaitsForEmptyEventLoop: false
+// Basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Simple test route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'DigiBoard Admin Dashboard - Serverless Function Working!',
+    timestamp: new Date().toISOString(),
+    environment: 'Netlify Functions'
+  });
 });
 
-// Export the handler
-exports.handler = async (event, context) => {
-  // Set the context to not wait for empty event loop
-  context.callbackWaitsForEmptyEventLoop = false;
-  
-  // Call the serverless handler
-  return await handler(event, context);
-};
+app.get('/test', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'Test endpoint working'
+  });
+});
+
+// Handle all other routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path,
+    method: req.method
+  });
+});
+
+// Export the serverless handler
+exports.handler = serverless(app);

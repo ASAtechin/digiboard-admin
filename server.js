@@ -155,16 +155,22 @@ app.get('/', requireAuth, (req, res) => {
 
 app.get('/dashboard', requireAuth, async (req, res) => {
   try {
+    console.log('Dashboard route accessed');
+    
     // Get data directly from database
     const [teachers, lectures] = await Promise.all([
       Teacher.find({}),
       Lecture.find({}).populate('teacher')
     ]);
 
+    console.log(`Dashboard data: ${teachers.length} teachers, ${lectures.length} lectures`);
+
     // Get next lecture
     const now = new Date();
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
     const currentTime = now.toTimeString().slice(0, 8);
+
+    console.log(`Current day: ${currentDay}, Current time: ${currentTime}`);
 
     let nextLecture = await Lecture.findOne({
       dayOfWeek: currentDay,
@@ -226,17 +232,21 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 // Teachers management
 app.get('/teachers', requireAuth, async (req, res) => {
   try {
+    console.log('Teachers route accessed');
     const teachers = await Teacher.find({}).sort({ name: 1 });
+    console.log(`Found ${teachers.length} teachers`);
+    
     res.render('teachers', { 
       teachers: teachers,
       user: req.session.username 
     });
   } catch (error) {
     console.error('Teachers error:', error.message);
+    console.error('Teachers error stack:', error.stack);
     res.render('teachers', { 
       teachers: [],
       user: req.session.username,
-      error: 'Failed to load teachers'
+      error: 'Failed to load teachers: ' + error.message
     });
   }
 });

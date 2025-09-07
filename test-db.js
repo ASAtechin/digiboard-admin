@@ -25,25 +25,59 @@ const testDatabase = async () => {
     console.log(`Teachers: ${teacherCount}`);
     console.log(`Lectures: ${lectureCount}`);
     
-    // Get sample data
-    console.log('\n👨‍🏫 Teachers:');
+    // Get detailed teacher data
+    console.log('\n👨‍🏫 Teachers (Detailed):');
     const teachers = await Teacher.find({}).limit(5);
-    teachers.forEach(teacher => {
-      console.log(`- ${teacher.name} (${teacher.subject}) - ${teacher.email}`);
+    teachers.forEach((teacher, index) => {
+      console.log(`${index + 1}. ${teacher.name}`);
+      console.log(`   Email: ${teacher.email}`);
+      console.log(`   Department: ${teacher.department}`);
+      console.log(`   Subjects: ${teacher.subjects || 'None'}`);
+      console.log(`   Phone: ${teacher.phone || 'Not provided'}`);
+      console.log(`   Office: ${teacher.office || 'Not provided'}`);
+      console.log(`   Experience: ${teacher.experience || 0} years`);
+      console.log('   ---');
     });
     
-    console.log('\n📚 Lectures:');
+    // Get detailed lecture data
+    console.log('\n📚 Lectures (Detailed):');
     const lectures = await Lecture.find({}).populate('teacher').limit(5);
-    lectures.forEach(lecture => {
+    lectures.forEach((lecture, index) => {
       const teacherName = lecture.teacher ? lecture.teacher.name : 'No teacher assigned';
-      console.log(`- ${lecture.subject} | ${lecture.dayOfWeek} ${lecture.startTime} | ${teacherName}`);
+      console.log(`${index + 1}. ${lecture.subject}`);
+      console.log(`   Day: ${lecture.dayOfWeek}`);
+      console.log(`   Time: ${lecture.startTime} - ${lecture.endTime}`);
+      console.log(`   Teacher: ${teacherName}`);
+      console.log(`   Room: ${lecture.room || 'Not specified'}`);
+      console.log(`   Active: ${lecture.isActive}`);
+      console.log('   ---');
     });
+    
+    // Test specific queries that the dashboard uses
+    console.log('\n🔍 Testing Dashboard Queries:');
+    
+    // Test teacher query
+    const dashboardTeachers = await Teacher.find({}).sort({ name: 1 });
+    console.log(`Dashboard Teachers Query: ${dashboardTeachers.length} teachers found`);
+    
+    // Test lecture query
+    const dashboardLectures = await Lecture.find({}).populate('teacher');
+    console.log(`Dashboard Lectures Query: ${dashboardLectures.length} lectures found`);
+    
+    // Test next lecture logic
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+    console.log(`Current day: ${currentDay}`);
+    
+    const todayLectures = await Lecture.find({ dayOfWeek: currentDay });
+    console.log(`Lectures today (${currentDay}): ${todayLectures.length}`);
     
     await mongoose.disconnect();
     console.log('\n✅ Database test completed');
     
   } catch (error) {
     console.error('❌ Database test failed:', error.message);
+    console.error('Stack trace:', error.stack);
   }
 };
 

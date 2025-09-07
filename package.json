@@ -4,10 +4,13 @@
   "description": "Admin dashboard for DigiBoard schedule management - Optimized for Vercel",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "echo 'Build completed'",
-    "test": "echo 'No tests specified'"
+    "start": "NODE_ENV=production node server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
+    "build": "echo 'Production build completed'",
+    "test": "echo 'Tests will be implemented soon'",
+    "deploy": "vercel --prod",
+    "deploy-dev": "vercel",
+    "clean": "rm -rf node_modules package-lock.json && npm install"
   },
   "keywords": [
     "digiboard",

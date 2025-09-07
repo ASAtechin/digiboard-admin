@@ -60,8 +60,8 @@ const connectDB = async () => {
   }
 };
 
-// Only connect immediately if not in Netlify serverless environment
-if (!process.env.NETLIFY) {
+// Only connect immediately if not in serverless environment
+if (!process.env.NETLIFY && !process.env.VERCEL) {
   connectDB();
 }
 
@@ -72,7 +72,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Database connection middleware for serverless
 app.use(async (req, res, next) => {
-  if (process.env.NETLIFY && !isConnected) {
+  if ((process.env.NETLIFY || process.env.VERCEL) && !isConnected) {
     try {
       await connectDB();
     } catch (error) {
@@ -491,7 +491,7 @@ app.post('/lectures/bulk-update', requireAuth, async (req, res) => {
 });
 
 // Start server only if not in serverless environment
-if (process.env.NODE_ENV !== 'production' || !process.env.NETLIFY) {
+if (process.env.NODE_ENV !== 'production' || (!process.env.NETLIFY && !process.env.VERCEL)) {
   app.listen(PORT, () => {
     console.log(`📊 Admin Dashboard running on http://localhost:${PORT}`);
     console.log(`🗄️  Connected to MongoDB`);

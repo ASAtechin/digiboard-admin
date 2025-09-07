@@ -41,7 +41,8 @@
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "vercel": "^47.0.5"
   },
   "engines": {
     "node": ">=18.0.0"

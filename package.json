@@ -1,7 +1,7 @@
 {
   "name": "digiboard-admin",
   "version": "1.0.0",
-  "description": "Modern serverless admin dashboard for DigiBoard schedule management",
+  "description": "Admin dashboard for DigiBoard schedule management - Optimized for Vercel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -16,8 +16,9 @@
     "schedule",
     "management",
     "education",
-    "serverless",
-    "netlify"
+    "vercel",
+    "express",
+    "mongodb"
   ],
   "author": "DigiBoard Team",
   "license": "MIT",
@@ -37,8 +38,7 @@
     "moment": "^2.29.4",
     "mongoose": "^8.18.0",
     "multer": "^1.4.5-lts.1",
-    "path": "^0.12.7",
-    "serverless-http": "^3.2.0"
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

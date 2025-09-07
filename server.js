@@ -11,16 +11,9 @@ const Teacher = require('./models/Teacher');
 const Lecture = require('./models/Lecture');
 
 const app = express();
-const PORT = process.env.PORT || process.env.ADMIN_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
-// Debug environment variables in production
-if (process.env.NODE_ENV === 'production') {
-  console.log('🚀 Production Environment');
-  console.log('PORT:', PORT);
-  console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
-}
-
-// MongoDB connection with lazy loading for serverless
+// MongoDB connection for Vercel serverless
 let isConnected = false;
 
 const connectDB = async () => {
@@ -31,67 +24,50 @@ const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/digiboard';
     
-    // Log the connection attempt (without exposing credentials)
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🌐 Connecting to MongoDB Atlas...');
-      // Log just the host part for debugging (not credentials)
-      const uriParts = mongoUri.split('@');
-      if (uriParts.length > 1) {
-        console.log('📍 MongoDB host:', uriParts[1].split('/')[0]);
-      }
-    } else {
-      console.log('Connecting to MongoDB...');
-    }
-    
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000, // Reduced timeout for serverless
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
       bufferCommands: false,
+      bufferMaxEntries: 0,
     });
+    
     isConnected = true;
-    console.log('✅ MongoDB connected successfully to DigiBoard database');
+    console.log('✅ MongoDB connected successfully');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    // Don't exit in production, let health checks handle it
     if (process.env.NODE_ENV !== 'production') {
       process.exit(1);
-    } else {
-      console.log('⚠️  Continuing without database connection in production...');
     }
   }
 };
 
-// Only connect immediately if not in serverless environment
-if (!process.env.NETLIFY && !process.env.VERCEL) {
+// Connect to database immediately for local development
+if (process.env.NODE_ENV !== 'production') {
   connectDB();
 }
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Database connection middleware for serverless
+// Middleware for Vercel serverless
 app.use(async (req, res, next) => {
-  if ((process.env.NETLIFY || process.env.VERCEL) && !isConnected) {
-    try {
-      await connectDB();
-    } catch (error) {
-      console.error('Database connection failed:', error.message);
-      return res.status(503).json({
-        error: 'Database connection failed',
-        message: 'Please try again in a moment'
-      });
-    }
+  if (!isConnected) {
+    await connectDB();
   }
   next();
 });
 
+// Basic middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'digiboard-admin-secret',
+  secret: process.env.SESSION_SECRET || 'digiboard-admin-secret-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // View engine setup
@@ -490,13 +466,25 @@ app.post('/lectures/bulk-update', requireAuth, async (req, res) => {
   }
 });
 
-// Start server only if not in serverless environment
-if (process.env.NODE_ENV !== 'production' || (!process.env.NETLIFY && !process.env.VERCEL)) {
+// API endpoints for lectures management
+app.put('/lectures/:id', requireAuth, async (req, res) => {
+  try {
+    await Lecture.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update lecture error:', error.message);
+    res.status(500).json({ error: 'Error updating lecture' });
+  }
+});
+
+// Start server for local development only
+if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`📊 Admin Dashboard running on http://localhost:${PORT}`);
-    console.log(`🗄️  Connected to MongoDB`);
+    console.log(`🗄️  MongoDB connection ready`);
     console.log(`👤 Login with: admin / admin123`);
   });
 }
 
+// Export for Vercel
 module.exports = app;

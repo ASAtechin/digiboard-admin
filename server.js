@@ -59,15 +59,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session middleware
+// Session middleware - optimized for Vercel deployment
 app.use(session({
   secret: process.env.SESSION_SECRET || 'digiboard-admin-secret-2024',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for Vercel compatibility
+    httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+  },
+  name: 'digiboard.sid' // Custom session name
 }));
 
 // View engine setup
@@ -97,13 +99,17 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   
+  console.log('Login attempt:', { username, hasPassword: !!password });
+  
   // Simple authentication (in production, use proper authentication)
   if (username === 'admin' && password === 'admin123') {
     req.session.isAuthenticated = true;
     req.session.username = username;
+    console.log('Login successful for:', username);
     res.redirect('/dashboard');
   } else {
-    res.render('login', { error: 'Invalid credentials' });
+    console.log('Login failed for:', username);
+    res.render('login', { error: 'Invalid credentials. Use username: admin, password: admin123' });
   }
 });
 

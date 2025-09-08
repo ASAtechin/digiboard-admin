@@ -426,24 +426,39 @@ app.get('/lectures/edit/:id', requireAuth, async (req, res) => {
 
 // Save lecture
 app.post('/lectures/save', requireAuth, async (req, res) => {
+  const startTime = new Date();
+  console.log('🔍 LECTURE SAVE ROUTE HIT at', startTime.toISOString());
+  console.log('🔍 Session user:', req.session.username);
+  console.log('🔍 Session ID:', req.sessionID);
+  console.log('🔍 Request body keys:', Object.keys(req.body));
+  console.log('🔍 Request body:', JSON.stringify(req.body, null, 2));
+  
   try {
-    console.log('🔍 LECTURE SAVE ROUTE HIT!');
-    console.log('Session user:', req.session.username);
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-    console.log('Request headers:', req.headers);
+    // Validate required fields first
+    const requiredFields = ['subject', 'teacher', 'classroom', 'dayOfWeek', 'startTime', 'endTime', 'semester'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      console.log('❌ Missing required fields:', missingFields);
+      return res.redirect('/lectures?error=' + encodeURIComponent('Missing required fields: ' + missingFields.join(', ')));
+    }
+    
+    console.log('✅ All required fields present');
     
     // Ensure database connection
+    console.log('🔍 Ensuring database connection...');
     await connectDB();
+    console.log('✅ Database connected');
     
     const lectureData = {
       subject: req.body.subject,
       teacher: req.body.teacher,
-      dayOfWeek: req.body.dayOfWeek, // Fix: use dayOfWeek from form
+      dayOfWeek: req.body.dayOfWeek,
       startTime: new Date(req.body.startTime),
       endTime: new Date(req.body.endTime),
-      classroom: req.body.classroom, // Fix: use classroom field
+      classroom: req.body.classroom,
       semester: req.body.semester || 'XII',
-      course: req.body.course || req.body.subject, // Fix: add required course field
+      course: req.body.course || req.body.subject,
       lectureType: req.body.lectureType || 'Lecture',
       chapter: req.body.chapter || '',
       description: req.body.description || '',
@@ -452,28 +467,44 @@ app.post('/lectures/save', requireAuth, async (req, res) => {
 
     console.log('🔍 Processed lecture data:', JSON.stringify(lectureData, null, 2));
 
+    let savedLecture;
     if (req.body.id) {
       // Update existing lecture
       console.log('🔍 Updating existing lecture with ID:', req.body.id);
       const result = await Lecture.findByIdAndUpdate(req.body.id, lectureData, { new: true });
-      console.log('✅ Updated lecture:', result);
+      console.log('✅ Updated lecture:', result._id);
+      savedLecture = result;
     } else {
       // Create new lecture
       console.log('🔍 Creating new lecture...');
       const lecture = new Lecture(lectureData);
-      const saved = await lecture.save();
-      console.log('✅ Created new lecture:', saved._id, saved.subject);
+      savedLecture = await lecture.save();
+      console.log('✅ Created new lecture:', savedLecture._id, savedLecture.subject);
     }
 
+    // Verify the lecture is actually in the database
+    console.log('🔍 Verifying lecture in database...');
+    const verification = await Lecture.findById(savedLecture._id);
+    if (verification) {
+      console.log('✅ Lecture verified in database:', verification.subject);
+    } else {
+      console.log('❌ Lecture NOT found in database after save!');
+    }
+
+    const endTime = new Date();
+    console.log('🔍 Total processing time:', endTime - startTime, 'ms');
     console.log('🔍 Redirecting to /lectures with timestamp...');
+    
     // Add cache-busting parameter to force refresh
     const timestamp = Date.now();
-    res.redirect(`/lectures?updated=${timestamp}`);
+    res.redirect(`/lectures?updated=${timestamp}&success=lecture_saved`);
   } catch (error) {
     console.error('❌ Save lecture error:', error.message);
-    console.error('❌ Error details:', error);
-    console.error('❌ Stack trace:', error.stack);
-    res.redirect('/lectures?error=' + encodeURIComponent(error.message));
+    console.error('❌ Error stack:', error.stack);
+    
+    // Send error details in redirect
+    const errorMsg = `${error.message} (${error.name})`;
+    res.redirect('/lectures?error=' + encodeURIComponent(errorMsg));
   }
 });
 

@@ -349,11 +349,28 @@
     <script src="/js/admin.js"></script>
     
     <script>
-        // Form validation
+        // Form validation with debugging
         document.getElementById('lectureForm').addEventListener('submit', function(e) {
+            console.log('🔍 Form submission attempted');
+            console.log('🔍 Form validity:', this.checkValidity());
+            
+            // Log all form data
+            const formData = new FormData(this);
+            console.log('🔍 Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            
             if (!this.checkValidity()) {
+                console.log('❌ Form validation failed');
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // Log which fields are invalid
+                const invalidFields = this.querySelectorAll(':invalid');
+                console.log('❌ Invalid fields:', Array.from(invalidFields).map(f => f.name || f.id));
+            } else {
+                console.log('✅ Form validation passed, submitting...');
             }
             this.classList.add('was-validated');
         });

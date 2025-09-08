@@ -114,6 +114,31 @@ app.get('/status', (req, res) => {
   });
 });
 
+// Debug endpoint to test time parsing
+app.get('/debug/time-test', (req, res) => {
+  function createDateFromTime(timeString) {
+    if (!timeString) return null;
+    if (timeString.includes('T') || timeString.includes(' ')) {
+      return new Date(timeString);
+    }
+    const today = new Date();
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0, 0);
+    return date;
+  }
+  
+  const testTime = req.query.time || '14:00';
+  const result = createDateFromTime(testTime);
+  
+  res.json({
+    input: testTime,
+    output: result,
+    isValid: !isNaN(result),
+    iso: result ? result.toISOString() : null,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {

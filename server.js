@@ -322,11 +322,15 @@ app.delete('/teachers/:id', requireAuth, async (req, res) => {
 // Lectures management
 app.get('/lectures', requireAuth, async (req, res) => {
   try {
+    console.log('Lectures route accessed');
+    
     // Get all lectures with populated teacher data
-    const lectures = await Lecture.find().populate('teacher').sort({ day: 1, startTime: 1 });
+    const lectures = await Lecture.find().populate('teacher').sort({ dayOfWeek: 1, startTime: 1 });
+    console.log(`Found ${lectures.length} lectures`);
     
     // Get all teachers for the dropdown
     const teachers = await Teacher.find().sort({ name: 1 });
+    console.log(`Found ${teachers.length} teachers`);
     
     res.render('lectures', {
       title: 'Manage Lectures',
@@ -336,6 +340,7 @@ app.get('/lectures', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Lectures error:', error.message);
+    console.error('Lectures error stack:', error.stack);
     res.render('lectures', {
       title: 'Manage Lectures',
       lectures: [],
@@ -383,29 +388,41 @@ app.get('/lectures/edit/:id', requireAuth, async (req, res) => {
 // Save lecture
 app.post('/lectures/save', requireAuth, async (req, res) => {
   try {
+    console.log('Saving lecture with data:', req.body);
+    
     const lectureData = {
       subject: req.body.subject,
       teacher: req.body.teacher,
-      day: req.body.day,
-      startTime: req.body.startTime,
-      endTime: req.body.endTime,
-      room: req.body.room,
-      semester: parseInt(req.body.semester) || 1
+      dayOfWeek: req.body.dayOfWeek, // Fix: use dayOfWeek from form
+      startTime: new Date(req.body.startTime),
+      endTime: new Date(req.body.endTime),
+      classroom: req.body.classroom, // Fix: use classroom field
+      semester: req.body.semester || 'XII',
+      course: req.body.course || req.body.subject, // Fix: add required course field
+      lectureType: req.body.lectureType || 'Lecture',
+      chapter: req.body.chapter || '',
+      description: req.body.description || '',
+      isActive: req.body.isActive !== undefined ? req.body.isActive === 'true' : true
     };
+
+    console.log('Processed lecture data:', lectureData);
 
     if (req.body.id) {
       // Update existing lecture
-      await Lecture.findByIdAndUpdate(req.body.id, lectureData);
+      const result = await Lecture.findByIdAndUpdate(req.body.id, lectureData, { new: true });
+      console.log('Updated lecture:', result);
     } else {
       // Create new lecture
       const lecture = new Lecture(lectureData);
-      await lecture.save();
+      const saved = await lecture.save();
+      console.log('Created new lecture:', saved);
     }
 
     res.redirect('/lectures');
   } catch (error) {
     console.error('Save lecture error:', error.message);
-    res.redirect('/lectures');
+    console.error('Error details:', error);
+    res.redirect('/lectures?error=' + encodeURIComponent(error.message));
   }
 });
 

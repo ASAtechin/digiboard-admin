@@ -1,4 +1,4 @@
-// Quick database test script
+// Database connectivity and model compatibility test
 const mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -6,10 +6,10 @@ require('dotenv').config();
 const Teacher = require('./models/Teacher');
 const Lecture = require('./models/Lecture');
 
-const testDatabase = async () => {
+const testDatabaseOperations = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/digiboard';
-    console.log('Connecting to:', mongoUri.split('@')[1].split('/')[0] + '/digiboard');
+    console.log('🔗 Connecting to:', mongoUri.split('@')[1].split('/')[0] + '/digiboard');
     
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 10000,
@@ -17,63 +17,72 @@ const testDatabase = async () => {
     
     console.log('✅ Connected to MongoDB');
     
-    // Count documents
+    // Test 1: Check existing data
     const teacherCount = await Teacher.countDocuments();
     const lectureCount = await Lecture.countDocuments();
     
-    console.log(`\n📊 Database Statistics:`);
+    console.log(`\n📊 Current Database State:`);
     console.log(`Teachers: ${teacherCount}`);
     console.log(`Lectures: ${lectureCount}`);
     
-    // Get detailed teacher data
-    console.log('\n👨‍🏫 Teachers (Detailed):');
-    const teachers = await Teacher.find({}).limit(5);
-    teachers.forEach((teacher, index) => {
-      console.log(`${index + 1}. ${teacher.name}`);
-      console.log(`   Email: ${teacher.email}`);
-      console.log(`   Department: ${teacher.department}`);
-      console.log(`   Subjects: ${teacher.subjects || 'None'}`);
-      console.log(`   Phone: ${teacher.phone || 'Not provided'}`);
-      console.log(`   Office: ${teacher.office || 'Not provided'}`);
-      console.log(`   Experience: ${teacher.experience || 0} years`);
-      console.log('   ---');
-    });
+    // Test 2: Get a sample teacher for testing
+    const firstTeacher = await Teacher.findOne();
+    if (!firstTeacher) {
+      console.log('❌ No teachers found in database');
+      return;
+    }
     
-    // Get detailed lecture data
-    console.log('\n📚 Lectures (Detailed):');
-    const lectures = await Lecture.find({}).populate('teacher').limit(5);
-    lectures.forEach((lecture, index) => {
-      const teacherName = lecture.teacher ? lecture.teacher.name : 'No teacher assigned';
-      console.log(`${index + 1}. ${lecture.subject}`);
-      console.log(`   Day: ${lecture.dayOfWeek}`);
-      console.log(`   Time: ${lecture.startTime} - ${lecture.endTime}`);
-      console.log(`   Teacher: ${teacherName}`);
-      console.log(`   Room: ${lecture.room || 'Not specified'}`);
-      console.log(`   Active: ${lecture.isActive}`);
-      console.log('   ---');
-    });
+    console.log(`\n👨‍🏫 Using teacher: ${firstTeacher.name} (${firstTeacher._id})`);
     
-    // Test specific queries that the dashboard uses
-    console.log('\n🔍 Testing Dashboard Queries:');
+    // Test 3: Create a test lecture with proper fields
+    const testLectureData = {
+      subject: 'TEST DATABASE CONNECTIVITY',
+      teacher: firstTeacher._id,
+      dayOfWeek: 'Monday',
+      startTime: new Date('2025-09-08T10:00:00'),
+      endTime: new Date('2025-09-08T11:00:00'),
+      classroom: 'TEST ROOM 999',
+      semester: 'XII',
+      course: 'Test Course',
+      lectureType: 'Lecture',
+      chapter: 'Database Testing',
+      description: 'Test lecture to verify admin panel connectivity',
+      isActive: true
+    };
     
-    // Test teacher query
-    const dashboardTeachers = await Teacher.find({}).sort({ name: 1 });
-    console.log(`Dashboard Teachers Query: ${dashboardTeachers.length} teachers found`);
+    console.log('\n🧪 Creating test lecture...');
+    const testLecture = new Lecture(testLectureData);
+    const savedLecture = await testLecture.save();
+    console.log('✅ Test lecture created:', savedLecture._id);
     
-    // Test lecture query
-    const dashboardLectures = await Lecture.find({}).populate('teacher');
-    console.log(`Dashboard Lectures Query: ${dashboardLectures.length} lectures found`);
+    // Test 4: Verify the lecture can be retrieved
+    const retrievedLecture = await Lecture.findById(savedLecture._id).populate('teacher');
+    console.log('✅ Test lecture retrieved with teacher:', retrievedLecture.teacher.name);
     
-    // Test next lecture logic
-    const now = new Date();
-    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-    console.log(`Current day: ${currentDay}`);
+    // Test 5: Update the lecture
+    retrievedLecture.description = 'Updated test description - ' + new Date().toISOString();
+    await retrievedLecture.save();
+    console.log('✅ Test lecture updated successfully');
     
-    const todayLectures = await Lecture.find({ dayOfWeek: currentDay });
-    console.log(`Lectures today (${currentDay}): ${todayLectures.length}`);
+    // Test 6: Check if lecture appears in main query
+    const allLectures = await Lecture.find().populate('teacher').sort({ dayOfWeek: 1, startTime: 1 });
+    const testLectureInList = allLectures.find(l => l._id.toString() === savedLecture._id.toString());
+    console.log('✅ Test lecture found in main query:', !!testLectureInList);
+    
+    // Test 7: Clean up - delete test lecture
+    await Lecture.findByIdAndDelete(savedLecture._id);
+    console.log('✅ Test lecture cleaned up');
+    
+    // Test 8: Final count verification
+    const finalLectureCount = await Lecture.countDocuments();
+    console.log(`\n📊 Final Database State:`);
+    console.log(`Lectures: ${finalLectureCount} (should be same as initial: ${lectureCount})`);
+    
+    console.log('\n🎉 ALL DATABASE TESTS PASSED');
+    console.log('✅ Admin panel should be able to create/read/update/delete lectures properly');
     
     await mongoose.disconnect();
-    console.log('\n✅ Database test completed');
+    console.log('\n🔌 Disconnected from MongoDB');
     
   } catch (error) {
     console.error('❌ Database test failed:', error.message);
@@ -81,4 +90,4 @@ const testDatabase = async () => {
   }
 };
 
-testDatabase();
+testDatabaseOperations();

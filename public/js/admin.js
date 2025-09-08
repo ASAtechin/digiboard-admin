@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
+    // Enhanced Lectures Page Functionality
+    if (window.location.pathname === '/lectures') {
+        initializeLecturesPage();
+    }
+
     // Auto-refresh dashboard every 5 minutes
     if (window.location.pathname === '/dashboard') {
         setInterval(function() {
@@ -22,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
 
     // Auto-save form data to localStorage
     const forms = document.querySelectorAll('form');
@@ -299,6 +305,173 @@ function showNotification(message, type = 'info') {
 function formatTime(time) {
     const date = new Date(`1970-01-01T${time}`);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Enhanced Lectures Page Functionality
+function initializeLecturesPage() {
+    const searchInput = document.getElementById('searchInput');
+    const dayFilter = document.getElementById('dayFilter');
+    const semesterFilter = document.getElementById('semesterFilter');
+    const teacherFilter = document.getElementById('teacherFilter');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const bulkActionsRow = document.getElementById('bulkActionsRow');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    let selectedLectures = new Set();
+
+    // Search and filter functionality
+    function filterLectures() {
+        const searchTerm = searchInput?.value.toLowerCase() || '';
+        const dayValue = dayFilter?.value || '';
+        const semesterValue = semesterFilter?.value || '';
+        const teacherValue = teacherFilter?.value || '';
+
+        document.querySelectorAll('.lecture-row').forEach(row => {
+            const subject = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+            const teacher = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            const classroom = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
+            const day = row.dataset.day || '';
+            const semester = row.dataset.semester || '';
+            const teacherId = row.dataset.teacherId || '';
+
+            const matchesSearch = !searchTerm || 
+                subject.includes(searchTerm) || 
+                teacher.includes(searchTerm) || 
+                classroom.includes(searchTerm);
+            
+            const matchesDay = !dayValue || day === dayValue;
+            const matchesSemester = !semesterValue || semester === semesterValue;
+            const matchesTeacher = !teacherValue || teacherId === teacherValue;
+
+            if (matchesSearch && matchesDay && matchesSemester && matchesTeacher) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+                // Uncheck hidden rows
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                    selectedLectures.delete(checkbox.value);
+                }
+            }
+        });
+
+        updateBulkActions();
+    }
+
+    // Event listeners for filters
+    searchInput?.addEventListener('input', filterLectures);
+    dayFilter?.addEventListener('change', filterLectures);
+    semesterFilter?.addEventListener('change', filterLectures);
+    teacherFilter?.addEventListener('change', filterLectures);
+
+    // Select all functionality
+    selectAllCheckbox?.addEventListener('change', function() {
+        const visibleCheckboxes = document.querySelectorAll('.lecture-row:not([style*="display: none"]) input[type="checkbox"]');
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            if (this.checked) {
+                selectedLectures.add(checkbox.value);
+            } else {
+                selectedLectures.delete(checkbox.value);
+            }
+        });
+        updateBulkActions();
+    });
+
+    // Individual checkbox handling
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox' && e.target.closest('.lecture-row')) {
+            if (e.target.checked) {
+                selectedLectures.add(e.target.value);
+            } else {
+                selectedLectures.delete(e.target.value);
+            }
+            updateBulkActions();
+        }
+    });
+
+    // Update bulk actions visibility
+    function updateBulkActions() {
+        if (selectedCountSpan) {
+            selectedCountSpan.textContent = selectedLectures.size;
+        }
+        
+        if (bulkActionsRow) {
+            bulkActionsRow.style.display = selectedLectures.size > 0 ? 'block' : 'none';
+        }
+
+        // Update select all checkbox
+        if (selectAllCheckbox) {
+            const visibleCheckboxes = document.querySelectorAll('.lecture-row:not([style*="display: none"]) input[type="checkbox"]');
+            const checkedVisible = document.querySelectorAll('.lecture-row:not([style*="display: none"]) input[type="checkbox"]:checked');
+            selectAllCheckbox.indeterminate = checkedVisible.length > 0 && checkedVisible.length < visibleCheckboxes.length;
+            selectAllCheckbox.checked = visibleCheckboxes.length > 0 && checkedVisible.length === visibleCheckboxes.length;
+        }
+    }
+
+    // Clear filters
+    window.clearFilters = function() {
+        if (searchInput) searchInput.value = '';
+        if (dayFilter) dayFilter.value = '';
+        if (semesterFilter) semesterFilter.value = '';
+        if (teacherFilter) teacherFilter.value = '';
+        filterLectures();
+    };
+
+    // Clear selection
+    window.clearSelection = function() {
+        selectedLectures.clear();
+        document.querySelectorAll('.lecture-row input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateBulkActions();
+    };
+
+    // Bulk delete
+    window.bulkDelete = function() {
+        if (selectedLectures.size === 0) return;
+        
+        if (confirm(`Are you sure you want to delete ${selectedLectures.size} lecture(s)?`)) {
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/lectures/bulk-delete';
+            
+            selectedLectures.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'lectureIds[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    };
+
+    // Bulk toggle status
+    window.bulkToggleStatus = function() {
+        if (selectedLectures.size === 0) return;
+        
+        if (confirm(`Toggle status for ${selectedLectures.size} lecture(s)?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/lectures/bulk-toggle-status';
+            
+            selectedLectures.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'lectureIds[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    };
 }
 
 function confirmAction(message, callback) {

@@ -507,6 +507,48 @@ app.get('/dashboard', requireAuth, async (req, res) => {
   }
 });
 
+// Bulk delete lectures
+app.post('/lectures/bulk-delete', requireAuth, async (req, res) => {
+  try {
+    const lectureIds = req.body.lectureIds || [];
+    if (lectureIds.length === 0) {
+      return res.redirect('/lectures?error=no_lectures_selected');
+    }
+
+    const result = await Lecture.deleteMany({ _id: { $in: lectureIds } });
+    console.log(`Bulk deleted ${result.deletedCount} lectures`);
+    
+    res.redirect(`/lectures?success=bulk_deleted&count=${result.deletedCount}`);
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.redirect('/lectures?error=bulk_delete_failed');
+  }
+});
+
+// Bulk toggle status
+app.post('/lectures/bulk-toggle-status', requireAuth, async (req, res) => {
+  try {
+    const lectureIds = req.body.lectureIds || [];
+    if (lectureIds.length === 0) {
+      return res.redirect('/lectures?error=no_lectures_selected');
+    }
+
+    // Get current lectures to toggle their status
+    const lectures = await Lecture.find({ _id: { $in: lectureIds } });
+    const updatePromises = lectures.map(lecture => 
+      Lecture.findByIdAndUpdate(lecture._id, { isActive: !lecture.isActive })
+    );
+    
+    await Promise.all(updatePromises);
+    console.log(`Bulk toggled status for ${lectures.length} lectures`);
+    
+    res.redirect(`/lectures?success=bulk_status_toggled&count=${lectures.length}`);
+  } catch (error) {
+    console.error('Bulk toggle status error:', error);
+    res.redirect('/lectures?error=bulk_toggle_failed');
+  }
+});
+
 // Teachers management
 app.get('/teachers', requireAuth, async (req, res) => {
   try {

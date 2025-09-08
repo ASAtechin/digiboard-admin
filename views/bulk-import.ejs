@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Import - DigiBoard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
+    <style>
+        .import-template {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .import-template:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .drop-zone {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .drop-zone.dragover {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                DigiBoard Admin
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/schedule">
+                            <i class="fas fa-calendar-alt me-1"></i>Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/lectures">
+                            <i class="fas fa-book me-1"></i>Lectures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/teachers">
+                            <i class="fas fa-users me-1"></i>Teachers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/bulk-import">
+                            <i class="fas fa-file-import me-1"></i>Bulk Import
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><%= user %>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="fas fa-file-import me-2 text-primary"></i>
+                            Bulk Import
+                        </h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Bulk Import</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div>
+                        <a href="/dashboard" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Options -->
+        <div class="row">
+            <!-- Import Teachers -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>Import Teachers
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="import-template drop-zone" id="teacherDropZone">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drop CSV file here or click to upload</h5>
+                            <p class="text-muted">Maximum file size: 5MB</p>
+                            <input type="file" id="teacherFile" accept=".csv" class="d-none">
+                            <button type="button" class="btn btn-outline-success" onclick="document.getElementById('teacherFile').click()">
+                                Choose File
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Required CSV Columns:</h6>
+                            <ul class="small text-muted">
+                                <li><strong>name</strong> - Full name (required)</li>
+                                <li><strong>email</strong> - Email address</li>
+                                <li><strong>phone</strong> - Phone number</li>
+                                <li><strong>department</strong> - Department name</li>
+                                <li><strong>subjects</strong> - Comma-separated subjects</li>
+                            </ul>
+                            <a href="/templates/teachers-template.csv" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-download me-1"></i>Download Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Lectures -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-book me-2"></i>Import Lectures
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="import-template drop-zone" id="lectureDropZone">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drop CSV file here or click to upload</h5>
+                            <p class="text-muted">Maximum file size: 5MB</p>
+                            <input type="file" id="lectureFile" accept=".csv" class="d-none">
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('lectureFile').click()">
+                                Choose File
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Required CSV Columns:</h6>
+                            <ul class="small text-muted">
+                                <li><strong>subject</strong> - Subject name (required)</li>
+                                <li><strong>teacherName</strong> - Teacher's full name (required)</li>
+                                <li><strong>classroom</strong> - Room/classroom (required)</li>
+                                <li><strong>dayOfWeek</strong> - Day (Monday, Tuesday, etc.)</li>
+                                <li><strong>startTime</strong> - Start time (HH:MM format)</li>
+                                <li><strong>endTime</strong> - End time (HH:MM format)</li>
+                                <li><strong>semester</strong> - Semester (I, II, etc.)</li>
+                                <li><strong>course</strong> - Course code</li>
+                            </ul>
+                            <a href="/templates/lectures-template.csv" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-download me-1"></i>Download Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Progress -->
+        <div class="row" id="importProgress" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog fa-spin me-2"></i>Import Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div id="importStatus">Preparing import...</div>
+                        <div id="importResults" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3 mt-5">
+        <div class="container">
+            <small class="text-muted">DigiBoard Admin Panel &copy; 2025</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File drag and drop functionality
+        function setupDropZone(dropZoneId, fileInputId, type) {
+            const dropZone = document.getElementById(dropZoneId);
+            const fileInput = document.getElementById(fileInputId);
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileUpload(files[0], type);
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], type);
+                }
+            });
+        }
+
+        // Handle file upload
+        async function handleFileUpload(file, type) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Please select a CSV file.');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                alert('File size must be less than 5MB.');
+                return;
+            }
+
+            const progressSection = document.getElementById('importProgress');
+            const progressBar = progressSection.querySelector('.progress-bar');
+            const statusDiv = document.getElementById('importStatus');
+            const resultsDiv = document.getElementById('importResults');
+
+            progressSection.style.display = 'block';
+            progressBar.style.width = '10%';
+            statusDiv.textContent = `Uploading ${file.name}...`;
+            resultsDiv.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', type);
+
+            try {
+                progressBar.style.width = '50%';
+                statusDiv.textContent = 'Processing file...';
+
+                const response = await fetch('/bulk-import/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                progressBar.style.width = '100%';
+
+                if (result.success) {
+                    progressBar.className = 'progress-bar bg-success';
+                    statusDiv.innerHTML = `<i class="fas fa-check-circle text-success me-2"></i>Import completed successfully!`;
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6>Import Summary:</h6>
+                            <ul class="mb-0">
+                                <li>Total records processed: ${result.total}</li>
+                                <li>Successfully imported: ${result.success_count}</li>
+                                <li>Errors: ${result.error_count}</li>
+                            </ul>
+                            ${result.errors && result.errors.length > 0 ? 
+                                `<details class="mt-2">
+                                    <summary>View Errors</summary>
+                                    <ul class="mt-2">
+                                        ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                                    </ul>
+                                </details>` : ''
+                            }
+                        </div>
+                    `;
+
+                    // Refresh page after 3 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    progressBar.className = 'progress-bar bg-danger';
+                    statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-danger me-2"></i>Import failed`;
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+                }
+
+            } catch (error) {
+                progressBar.className = 'progress-bar bg-danger';
+                progressBar.style.width = '100%';
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-danger me-2"></i>Upload failed`;
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize drop zones
+        setupDropZone('teacherDropZone', 'teacherFile', 'teachers');
+        setupDropZone('lectureDropZone', 'lectureFile', 'lectures');
+    </script>
+</body>
+</html>

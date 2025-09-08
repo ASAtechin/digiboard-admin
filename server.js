@@ -5,6 +5,9 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const multer = require('multer');
+const csv = require('csv-parser');
+const { Readable } = require('stream');
 require('dotenv').config();
 
 // Import models
@@ -13,6 +16,21 @@ const Lecture = require('./models/Lecture');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  }
+});
 
 // MongoDB connection for Vercel serverless
 let isConnected = false;
@@ -86,6 +104,154 @@ app.set('views', path.join(__dirname, 'views'));
 // Make moment available in all templates
 app.locals.moment = moment;
 
+// CSV Import Functions
+async function importTeachers(csvContent) {
+  return new Promise((resolve) => {
+    const results = [];
+    const errors = [];
+    let total = 0;
+    let successCount = 0;
+
+    const stream = Readable.from([csvContent]);
+    
+    stream
+      .pipe(csv())
+      .on('data', async (row) => {
+        total++;
+        try {
+          // Validate required fields
+          if (!row.name || !row.name.trim()) {
+            errors.push(`Row ${total}: Name is required`);
+            return;
+          }
+
+          // Check if teacher already exists
+          const existingTeacher = await Teacher.findOne({ 
+            name: { $regex: new RegExp(`^${row.name.trim()}$`, 'i') } 
+          });
+
+          if (existingTeacher) {
+            errors.push(`Row ${total}: Teacher "${row.name}" already exists`);
+            return;
+          }
+
+          // Create teacher
+          const teacherData = {
+            name: row.name.trim(),
+            email: row.email?.trim() || '',
+            phone: row.phone?.trim() || '',
+            department: row.department?.trim() || '',
+            subjects: row.subjects ? row.subjects.split(',').map(s => s.trim()) : []
+          };
+
+          await Teacher.create(teacherData);
+          successCount++;
+          
+        } catch (error) {
+          errors.push(`Row ${total}: ${error.message}`);
+        }
+      })
+      .on('end', () => {
+        resolve({
+          success: true,
+          total,
+          success_count: successCount,
+          error_count: errors.length,
+          errors: errors.slice(0, 10) // Limit to first 10 errors
+        });
+      })
+      .on('error', (error) => {
+        resolve({
+          success: false,
+          message: `CSV parsing error: ${error.message}`
+        });
+      });
+  });
+}
+
+async function importLectures(csvContent) {
+  return new Promise((resolve) => {
+    const results = [];
+    const errors = [];
+    let total = 0;
+    let successCount = 0;
+
+    const stream = Readable.from([csvContent]);
+    
+    stream
+      .pipe(csv())
+      .on('data', async (row) => {
+        total++;
+        try {
+          // Validate required fields
+          if (!row.subject?.trim()) {
+            errors.push(`Row ${total}: Subject is required`);
+            return;
+          }
+          if (!row.teacherName?.trim()) {
+            errors.push(`Row ${total}: Teacher name is required`);
+            return;
+          }
+          if (!row.classroom?.trim()) {
+            errors.push(`Row ${total}: Classroom is required`);
+            return;
+          }
+
+          // Find teacher by name
+          const teacher = await Teacher.findOne({ 
+            name: { $regex: new RegExp(`^${row.teacherName.trim()}$`, 'i') } 
+          });
+
+          if (!teacher) {
+            errors.push(`Row ${total}: Teacher "${row.teacherName}" not found`);
+            return;
+          }
+
+          // Helper function to create date from time string
+          function createDateFromTime(timeString) {
+            if (!timeString) return null;
+            const today = new Date();
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0, 0);
+          }
+
+          // Create lecture
+          const lectureData = {
+            subject: row.subject.trim(),
+            teacher: teacher._id,
+            classroom: row.classroom.trim(),
+            dayOfWeek: row.dayOfWeek?.trim() || 'Monday',
+            startTime: createDateFromTime(row.startTime?.trim() || '09:00'),
+            endTime: createDateFromTime(row.endTime?.trim() || '10:00'),
+            semester: row.semester?.trim() || 'XII',
+            course: row.course?.trim() || row.subject.trim()
+          };
+
+          await Lecture.create(lectureData);
+          successCount++;
+          
+        } catch (error) {
+          errors.push(`Row ${total}: ${error.message}`);
+        }
+      })
+      .on('end', () => {
+        resolve({
+          success: true,
+          total,
+          success_count: successCount,
+          error_count: errors.length,
+          errors: errors.slice(0, 10) // Limit to first 10 errors
+        });
+      })
+      .on('error', (error) => {
+        resolve({
+          success: false,
+          message: `CSV parsing error: ${error.message}`
+        });
+      });
+  });
+}
+
 // Authentication middleware with session debugging
 const requireAuth = (req, res, next) => {
   console.log('Auth check:', {
@@ -112,6 +278,59 @@ app.get('/status', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'digiboard-admin'
   });
+});
+
+// Bulk import page
+app.get('/bulk-import', requireAuth, async (req, res) => {
+  res.render('bulk-import', {
+    user: req.session.username
+  });
+});
+
+// Bulk import upload handler
+app.post('/bulk-import/upload', requireAuth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const type = req.body.type; // 'teachers' or 'lectures'
+    const csvContent = req.file.buffer.toString();
+    
+    if (type === 'teachers') {
+      const result = await importTeachers(csvContent);
+      res.json(result);
+    } else if (type === 'lectures') {
+      const result = await importLectures(csvContent);
+      res.json(result);
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid import type' });
+    }
+  } catch (error) {
+    console.error('Bulk import error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// CSV template downloads
+app.get('/templates/teachers-template.csv', (req, res) => {
+  const csv = 'name,email,phone,department,subjects\n' +
+            'John Doe,john@school.com,+1234567890,Mathematics,"Mathematics, Statistics"\n' +
+            'Jane Smith,jane@school.com,+1234567891,Physics,"Physics, Chemistry"';
+  
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=teachers-template.csv');
+  res.send(csv);
+});
+
+app.get('/templates/lectures-template.csv', (req, res) => {
+  const csv = 'subject,teacherName,classroom,dayOfWeek,startTime,endTime,semester,course\n' +
+            'Mathematics,John Doe,Room 101,Monday,09:00,10:00,XII,MATH101\n' +
+            'Physics,Jane Smith,Lab 201,Tuesday,10:00,11:00,XII,PHY101';
+  
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=lectures-template.csv');
+  res.send(csv);
 });
 
 // Debug endpoint to test time parsing
@@ -270,6 +489,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     res.render('dashboard', { 
       stats,
+      teachers, // Pass teachers for the quick action modal
       user: req.session.username 
     });
   } catch (error) {

@@ -326,13 +326,20 @@ function initializeLecturesPage() {
         const semesterValue = semesterFilter?.value || '';
         const teacherValue = teacherFilter?.value || '';
 
+        console.log('Admin.js filtering with:', { searchTerm, dayValue, semesterValue, teacherValue });
+
         document.querySelectorAll('.lecture-row').forEach(row => {
+            // Get text content from correct columns (updated table structure)
             const subject = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
             const teacher = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
             const classroom = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
+            
+            // Get data attributes (fixed attribute names)
             const day = row.dataset.day || '';
-            const semester = row.dataset.semester || '';
-            const teacherId = row.dataset.teacherId || '';
+            const semester = row.getAttribute('data-semester') || '';
+            const teacherId = row.getAttribute('data-teacher-id') || '';
+
+            console.log('Row data:', { subject, teacher, classroom, day, semester, teacherId });
 
             const matchesSearch = !searchTerm || 
                 subject.includes(searchTerm) || 
@@ -342,6 +349,8 @@ function initializeLecturesPage() {
             const matchesDay = !dayValue || day === dayValue;
             const matchesSemester = !semesterValue || semester === semesterValue;
             const matchesTeacher = !teacherValue || teacherId === teacherValue;
+
+            console.log('Matches:', { matchesSearch, matchesDay, matchesSemester, matchesTeacher });
 
             if (matchesSearch && matchesDay && matchesSemester && matchesTeacher) {
                 row.style.display = '';

@@ -365,89 +365,54 @@
     <script src="/js/admin.js"></script>
     
     <script>
-        // Enhanced filter functionality with visible count update
-        function updateVisibleCount() {
-            const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
-            document.getElementById('visibleCount').textContent = visibleRows;
-        }
-
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('.lecture-row');
+        // Initialize page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize lectures page functionality from admin.js
+            if (typeof initializeLecturesPage === 'function') {
+                initializeLecturesPage();
+            }
             
-            rows.forEach(function(row) {
-                const subject = row.dataset.subject || '';
-                const teacherName = row.dataset.teacherName || '';
-                const classroom = row.dataset.classroom || '';
-                
-                const isVisible = subject.includes(searchTerm) || 
-                                teacherName.includes(searchTerm) || 
-                                classroom.includes(searchTerm);
-                
-                row.style.display = isVisible ? '' : 'none';
+            // Update visible count
+            function updateVisibleCount() {
+                const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
+                const totalRows = document.querySelectorAll('.lecture-row').length;
+                document.getElementById('visibleCount').textContent = visibleRows;
+            }
+            
+            // Set up observer to watch for display style changes
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'style') {
+                        updateVisibleCount();
+                    }
+                });
             });
             
-            updateVisibleCount();
-        });
-
-        // Day filter functionality
-        document.getElementById('dayFilter').addEventListener('change', function() {
-            const selectedDay = this.value;
-            const rows = document.querySelectorAll('.lecture-row');
-            
-            rows.forEach(function(row) {
-                const isVisible = selectedDay === '' || row.dataset.day === selectedDay;
-                row.style.display = isVisible ? '' : 'none';
-            });
-            
-            updateVisibleCount();
-        });
-
-        // Semester filter functionality
-        document.getElementById('semesterFilter').addEventListener('change', function() {
-            const selectedSemester = this.value;
-            const rows = document.querySelectorAll('.lecture-row');
-            
-            console.log('Semester filter:', selectedSemester); // Debug log
-            
-            rows.forEach(function(row) {
-                const rowSemester = row.getAttribute('data-semester') || '';
-                console.log('Row semester:', rowSemester, 'Selected:', selectedSemester); // Debug log
-                
-                const isVisible = selectedSemester === '' || rowSemester === selectedSemester;
-                row.style.display = isVisible ? '' : 'none';
-            });
-            
-            updateVisibleCount();
-        });
-
-        // Teacher filter functionality
-        document.getElementById('teacherFilter').addEventListener('change', function() {
-            const selectedTeacher = this.value;
-            const rows = document.querySelectorAll('.lecture-row');
-            
-            rows.forEach(function(row) {
-                const isVisible = selectedTeacher === '' || row.getAttribute('data-teacher-id') === selectedTeacher;
-                row.style.display = isVisible ? '' : 'none';
-            });
-            
-            updateVisibleCount();
-        });
-
-        // Clear all filters
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('dayFilter').value = '';
-            document.getElementById('semesterFilter').value = '';
-            document.getElementById('teacherFilter').value = '';
-            
+            // Observe all lecture rows for style changes
             document.querySelectorAll('.lecture-row').forEach(function(row) {
-                row.style.display = '';
+                observer.observe(row, { 
+                    attributes: true, 
+                    attributeFilter: ['style'] 
+                });
             });
             
+            // Initial count
             updateVisibleCount();
-        }
+            
+            // Clear all filters function
+            window.clearFilters = function() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('dayFilter').value = '';
+                document.getElementById('semesterFilter').value = '';
+                document.getElementById('teacherFilter').value = '';
+                
+                // Trigger the admin.js filter function
+                if (typeof initializeLecturesPage === 'function') {
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                }
+            };
+        });
+    </script>
 
         // Update bulk action form with selected lecture IDs
         document.addEventListener('change', function(e) {

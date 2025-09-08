@@ -105,6 +105,31 @@ const requireAuth = (req, res, next) => {
 
 // Routes
 
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const Teacher = require('./models/Teacher');
+    const teacherCount = await Teacher.countDocuments();
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      teacherCount: teacherCount,
+      service: 'digiboard-admin'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message,
+      service: 'digiboard-admin'
+    });
+  }
+});
+
 // Login page
 app.get('/login', (req, res) => {
   res.render('login', { error: null });

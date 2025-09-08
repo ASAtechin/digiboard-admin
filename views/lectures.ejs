@@ -367,16 +367,24 @@
     <script>
         // Initialize page functionality
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Lectures page DOMContentLoaded fired');
+            
             // Initialize lectures page functionality from admin.js
             if (typeof initializeLecturesPage === 'function') {
+                console.log('Calling initializeLecturesPage');
                 initializeLecturesPage();
+            } else {
+                console.error('initializeLecturesPage function not found');
             }
             
             // Update visible count
             function updateVisibleCount() {
                 const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
                 const totalRows = document.querySelectorAll('.lecture-row').length;
-                document.getElementById('visibleCount').textContent = visibleRows;
+                const visibleCountElement = document.getElementById('visibleCount');
+                if (visibleCountElement) {
+                    visibleCountElement.textContent = visibleRows;
+                }
             }
             
             // Set up observer to watch for display style changes
@@ -401,41 +409,36 @@
             
             // Clear all filters function
             window.clearFilters = function() {
+                console.log('Clearing all filters');
                 document.getElementById('searchInput').value = '';
                 document.getElementById('dayFilter').value = '';
                 document.getElementById('semesterFilter').value = '';
                 document.getElementById('teacherFilter').value = '';
                 
-                // Trigger the admin.js filter function
-                if (typeof initializeLecturesPage === 'function') {
-                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                // Trigger the filter function by dispatching input event
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.dispatchEvent(new Event('input'));
                 }
             };
-        });
-    </script>
-
-        // Update bulk action form with selected lecture IDs
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('lecture-checkbox') || e.target.id === 'selectAll') {
-                const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
-                const lectureIds = Array.from(checkedBoxes).map(cb => cb.value);
-                
-                // Update selected count and show/hide bulk actions
-                const selectedCount = checkedBoxes.length;
-                document.getElementById('selectedCount').textContent = selectedCount;
-                
-                const bulkActionsRow = document.getElementById('bulkActionsRow');
-                if (selectedCount > 0) {
-                    bulkActionsRow.style.display = 'block';
-                } else {
-                    bulkActionsRow.style.display = 'none';
+            
+            // Bulk action functionality
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('lecture-checkbox') || e.target.id === 'selectAll') {
+                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                    const selectedCount = checkedBoxes.length;
+                    
+                    const selectedCountElement = document.getElementById('selectedCount');
+                    if (selectedCountElement) {
+                        selectedCountElement.textContent = selectedCount;
+                    }
+                    
+                    const bulkActionsRow = document.getElementById('bulkActionsRow');
+                    if (bulkActionsRow) {
+                        bulkActionsRow.style.display = selectedCount > 0 ? 'block' : 'none';
+                    }
                 }
-            }
-        });
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            updateVisibleCount();
+            });
         });
     </script>
 </body>

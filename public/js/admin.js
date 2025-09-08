@@ -309,6 +309,8 @@ function formatTime(time) {
 
 // Enhanced Lectures Page Functionality
 function initializeLecturesPage() {
+    console.log('initializeLecturesPage called');
+    
     const searchInput = document.getElementById('searchInput');
     const dayFilter = document.getElementById('dayFilter');
     const semesterFilter = document.getElementById('semesterFilter');
@@ -316,6 +318,16 @@ function initializeLecturesPage() {
     const selectAllCheckbox = document.getElementById('selectAll');
     const bulkActionsRow = document.getElementById('bulkActionsRow');
     const selectedCountSpan = document.getElementById('selectedCount');
+
+    console.log('Elements found:', {
+        searchInput: !!searchInput,
+        dayFilter: !!dayFilter,
+        semesterFilter: !!semesterFilter,
+        teacherFilter: !!teacherFilter,
+        selectAllCheckbox: !!selectAllCheckbox,
+        bulkActionsRow: !!bulkActionsRow,
+        selectedCountSpan: !!selectedCountSpan
+    });
 
     let selectedLectures = new Set();
 
@@ -325,8 +337,6 @@ function initializeLecturesPage() {
         const dayValue = dayFilter?.value || '';
         const semesterValue = semesterFilter?.value || '';
         const teacherValue = teacherFilter?.value || '';
-
-        console.log('Admin.js filtering with:', { searchTerm, dayValue, semesterValue, teacherValue });
 
         document.querySelectorAll('.lecture-row').forEach(row => {
             // Get text content from correct columns (updated table structure)
@@ -339,8 +349,6 @@ function initializeLecturesPage() {
             const semester = row.getAttribute('data-semester') || '';
             const teacherId = row.getAttribute('data-teacher-id') || '';
 
-            console.log('Row data:', { subject, teacher, classroom, day, semester, teacherId });
-
             const matchesSearch = !searchTerm || 
                 subject.includes(searchTerm) || 
                 teacher.includes(searchTerm) || 
@@ -349,8 +357,6 @@ function initializeLecturesPage() {
             const matchesDay = !dayValue || day === dayValue;
             const matchesSemester = !semesterValue || semester === semesterValue;
             const matchesTeacher = !teacherValue || teacherId === teacherValue;
-
-            console.log('Matches:', { matchesSearch, matchesDay, matchesSemester, matchesTeacher });
 
             if (matchesSearch && matchesDay && matchesSemester && matchesTeacher) {
                 row.style.display = '';
@@ -369,10 +375,23 @@ function initializeLecturesPage() {
     }
 
     // Event listeners for filters
-    searchInput?.addEventListener('input', filterLectures);
-    dayFilter?.addEventListener('change', filterLectures);
-    semesterFilter?.addEventListener('change', filterLectures);
-    teacherFilter?.addEventListener('change', filterLectures);
+    console.log('Setting up event listeners');
+    searchInput?.addEventListener('input', function() {
+        console.log('Search input event fired:', this.value);
+        filterLectures();
+    });
+    dayFilter?.addEventListener('change', function() {
+        console.log('Day filter event fired:', this.value);
+        filterLectures();
+    });
+    semesterFilter?.addEventListener('change', function() {
+        console.log('Semester filter event fired:', this.value);
+        filterLectures();
+    });
+    teacherFilter?.addEventListener('change', function() {
+        console.log('Teacher filter event fired:', this.value);
+        filterLectures();
+    });
 
     // Select all functionality
     selectAllCheckbox?.addEventListener('change', function() {

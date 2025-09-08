@@ -105,6 +105,15 @@ const requireAuth = (req, res, next) => {
 
 // Routes
 
+// Simple public status endpoint (no DB required)
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    service: 'digiboard-admin'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
@@ -349,6 +358,11 @@ app.get('/lectures', requireAuth, async (req, res) => {
   try {
     console.log('Lectures route accessed');
     
+    // Prevent caching of this page
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     // Get all lectures with populated teacher data
     const lectures = await Lecture.find().populate('teacher').sort({ dayOfWeek: 1, startTime: 1 });
     console.log(`Found ${lectures.length} lectures`);
@@ -443,7 +457,9 @@ app.post('/lectures/save', requireAuth, async (req, res) => {
       console.log('Created new lecture:', saved);
     }
 
-    res.redirect('/lectures');
+    // Add cache-busting parameter to force refresh
+    const timestamp = Date.now();
+    res.redirect(`/lectures?updated=${timestamp}`);
   } catch (error) {
     console.error('Save lecture error:', error.message);
     console.error('Error details:', error);

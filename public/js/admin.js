@@ -166,8 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Status indicator
+    // Status indicator with fallback
     function updateConnectionStatus() {
+        // Try the health endpoint first
         fetch('/api/health')
             .then(response => {
                 const statusIndicator = document.getElementById('connectionStatus');
@@ -182,11 +183,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(() => {
-                const statusIndicator = document.getElementById('connectionStatus');
-                if (statusIndicator) {
-                    statusIndicator.className = 'badge bg-danger';
-                    statusIndicator.innerHTML = '<i class="fas fa-times-circle me-1"></i>Disconnected';
-                }
+                // Fallback to simple status endpoint if health endpoint fails
+                fetch('/status')
+                    .then(response => {
+                        const statusIndicator = document.getElementById('connectionStatus');
+                        if (statusIndicator) {
+                            if (response.ok) {
+                                statusIndicator.className = 'badge bg-info';
+                                statusIndicator.innerHTML = '<i class="fas fa-info-circle me-1"></i>Online';
+                            } else {
+                                statusIndicator.className = 'badge bg-warning';
+                                statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Warning';
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        const statusIndicator = document.getElementById('connectionStatus');
+                        if (statusIndicator) {
+                            statusIndicator.className = 'badge bg-danger';
+                            statusIndicator.innerHTML = '<i class="fas fa-times-circle me-1"></i>Disconnected';
+                        }
+                    });
             });
     }
 

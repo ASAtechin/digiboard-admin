@@ -362,140 +362,203 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/admin.js"></script>
     
     <script>
-        // Initialize page functionality
+        // SIMPLE WORKING FILTER SYSTEM
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize lectures page functionality from admin.js
-            if (typeof initializeLecturesPage === 'function') {
-                initializeLecturesPage();
-            }
             
-            // Fallback clearFilters function if not defined by admin.js
-            if (typeof window.clearFilters === 'undefined') {
-                window.clearFilters = function() {
-                    document.getElementById('searchInput').value = '';
-                    document.getElementById('dayFilter').value = '';
-                    document.getElementById('semesterFilter').value = '';
-                    document.getElementById('teacherFilter').value = '';
+            // Get filter elements
+            const searchInput = document.getElementById('searchInput');
+            const dayFilter = document.getElementById('dayFilter');
+            const semesterFilter = document.getElementById('semesterFilter');
+            const teacherFilter = document.getElementById('teacherFilter');
+            
+            // Simple filter function that actually works
+            function filterLectures() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedDay = dayFilter.value;
+                const selectedSemester = semesterFilter.value;
+                const selectedTeacher = teacherFilter.value;
+                
+                const rows = document.querySelectorAll('.lecture-row');
+                let visibleCount = 0;
+                
+                rows.forEach(function(row) {
+                    let showRow = true;
                     
-                    // Show all rows
-                    document.querySelectorAll('.lecture-row').forEach(function(row) {
+                    // Search filter - check text content
+                    if (searchTerm) {
+                        const rowText = row.textContent.toLowerCase();
+                        if (!rowText.includes(searchTerm)) {
+                            showRow = false;
+                        }
+                    }
+                    
+                    // Day filter
+                    if (selectedDay && showRow) {
+                        const rowDay = row.getAttribute('data-day');
+                        if (rowDay !== selectedDay) {
+                            showRow = false;
+                        }
+                    }
+                    
+                    // Semester filter
+                    if (selectedSemester && showRow) {
+                        const rowSemester = row.getAttribute('data-semester');
+                        if (rowSemester !== selectedSemester) {
+                            showRow = false;
+                        }
+                    }
+                    
+                    // Teacher filter
+                    if (selectedTeacher && showRow) {
+                        const rowTeacher = row.getAttribute('data-teacher-id');
+                        if (rowTeacher !== selectedTeacher) {
+                            showRow = false;
+                        }
+                    }
+                    
+                    // Show/hide row
+                    if (showRow) {
                         row.style.display = '';
-                    });
-                    
-                    // Update count
-                    const visibleCountElement = document.getElementById('visibleCount');
-                    if (visibleCountElement) {
-                        const totalRows = document.querySelectorAll('.lecture-row').length;
-                        visibleCountElement.textContent = totalRows;
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                        // Uncheck hidden rows
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        if (checkbox) checkbox.checked = false;
                     }
-                };
-            }
-            
-            // Fallback clearSelection function if not defined by admin.js
-            if (typeof window.clearSelection === 'undefined') {
-                window.clearSelection = function() {
-                    document.querySelectorAll('.lecture-row input[type="checkbox"]').forEach(function(checkbox) {
-                        checkbox.checked = false;
-                    });
-                    
-                    const bulkActionsRow = document.getElementById('bulkActionsRow');
-                    if (bulkActionsRow) {
-                        bulkActionsRow.style.display = 'none';
-                    }
-                    
-                    const selectedCountElement = document.getElementById('selectedCount');
-                    if (selectedCountElement) {
-                        selectedCountElement.textContent = '0';
-                    }
-                };
-            }
-            
-            // Fallback bulk functions if not defined by admin.js
-            if (typeof window.bulkDelete === 'undefined') {
-                window.bulkDelete = function() {
-                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
-                    if (checkedBoxes.length === 0) {
-                        alert('Please select lectures to delete.');
-                        return;
-                    }
-                    
-                    if (confirm(`Are you sure you want to delete ${checkedBoxes.length} lecture(s)?`)) {
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '/lectures/bulk-delete';
-                        
-                        checkedBoxes.forEach(checkbox => {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'lectureIds[]';
-                            input.value = checkbox.value;
-                            form.appendChild(input);
-                        });
-                        
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                };
-            }
-            
-            if (typeof window.bulkToggleStatus === 'undefined') {
-                window.bulkToggleStatus = function() {
-                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
-                    if (checkedBoxes.length === 0) {
-                        alert('Please select lectures to toggle status.');
-                        return;
-                    }
-                    
-                    if (confirm(`Toggle status for ${checkedBoxes.length} lecture(s)?`)) {
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '/lectures/bulk-toggle-status';
-                        
-                        checkedBoxes.forEach(checkbox => {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'lectureIds[]';
-                            input.value = checkbox.value;
-                            form.appendChild(input);
-                        });
-                        
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                };
-            }
-            
-            // Update visible count
-            function updateVisibleCount() {
-                const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
+                });
+                
+                // Update visible count
                 const visibleCountElement = document.getElementById('visibleCount');
                 if (visibleCountElement) {
-                    visibleCountElement.textContent = visibleRows;
+                    visibleCountElement.textContent = visibleCount;
+                }
+                
+                updateBulkActions();
+            }
+            
+            // Attach event listeners
+            if (searchInput) searchInput.addEventListener('input', filterLectures);
+            if (dayFilter) dayFilter.addEventListener('change', filterLectures);
+            if (semesterFilter) semesterFilter.addEventListener('change', filterLectures);
+            if (teacherFilter) teacherFilter.addEventListener('change', filterLectures);
+            
+            // Clear filters function
+            window.clearFilters = function() {
+                if (searchInput) searchInput.value = '';
+                if (dayFilter) dayFilter.value = '';
+                if (semesterFilter) semesterFilter.value = '';
+                if (teacherFilter) teacherFilter.value = '';
+                filterLectures();
+            };
+            
+            // Bulk actions functionality
+            function updateBulkActions() {
+                const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                const selectedCount = checkedBoxes.length;
+                
+                const selectedCountElement = document.getElementById('selectedCount');
+                if (selectedCountElement) {
+                    selectedCountElement.textContent = selectedCount;
+                }
+                
+                const bulkActionsRow = document.getElementById('bulkActionsRow');
+                if (bulkActionsRow) {
+                    bulkActionsRow.style.display = selectedCount > 0 ? 'block' : 'none';
+                }
+                
+                // Update select all checkbox
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    const visibleCheckboxes = document.querySelectorAll('.lecture-row:not([style*="display: none"]) .lecture-checkbox');
+                    const visibleChecked = document.querySelectorAll('.lecture-row:not([style*="display: none"]) .lecture-checkbox:checked');
+                    
+                    selectAllCheckbox.checked = visibleCheckboxes.length > 0 && visibleChecked.length === visibleCheckboxes.length;
+                    selectAllCheckbox.indeterminate = visibleChecked.length > 0 && visibleChecked.length < visibleCheckboxes.length;
                 }
             }
             
-            // Set up observer to watch for display style changes
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'style') {
-                        updateVisibleCount();
-                    }
+            // Select all functionality
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const visibleCheckboxes = document.querySelectorAll('.lecture-row:not([style*="display: none"]) .lecture-checkbox');
+                    visibleCheckboxes.forEach(function(checkbox) {
+                        checkbox.checked = selectAllCheckbox.checked;
+                    });
+                    updateBulkActions();
                 });
+            }
+            
+            // Individual checkbox handling
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('lecture-checkbox')) {
+                    updateBulkActions();
+                }
             });
             
-            // Observe all lecture rows for style changes
-            document.querySelectorAll('.lecture-row').forEach(function(row) {
-                observer.observe(row, { 
-                    attributes: true, 
-                    attributeFilter: ['style'] 
+            // Bulk functions
+            window.clearSelection = function() {
+                document.querySelectorAll('.lecture-checkbox').forEach(function(checkbox) {
+                    checkbox.checked = false;
                 });
-            });
+                updateBulkActions();
+            };
             
-            // Initial count
-            updateVisibleCount();
+            window.bulkDelete = function() {
+                const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    alert('Please select lectures to delete.');
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to delete ${checkedBoxes.length} lecture(s)?`)) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/lectures/bulk-delete';
+                    
+                    checkedBoxes.forEach(function(checkbox) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'lectureIds[]';
+                        input.value = checkbox.value;
+                        form.appendChild(input);
+                    });
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            };
+            
+            window.bulkToggleStatus = function() {
+                const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    alert('Please select lectures to toggle status.');
+                    return;
+                }
+                
+                if (confirm(`Toggle status for ${checkedBoxes.length} lecture(s)?`)) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/lectures/bulk-toggle-status';
+                    
+                    checkedBoxes.forEach(function(checkbox) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'lectureIds[]';
+                        input.value = checkbox.value;
+                        form.appendChild(input);
+                    });
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            };
+            
+            // Initial setup
+            filterLectures();
         });
     </script>
 </body>

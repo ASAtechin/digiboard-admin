@@ -427,7 +427,13 @@ app.get('/lectures/edit/:id', requireAuth, async (req, res) => {
 // Save lecture
 app.post('/lectures/save', requireAuth, async (req, res) => {
   try {
-    console.log('Saving lecture with data:', req.body);
+    console.log('🔍 LECTURE SAVE ROUTE HIT!');
+    console.log('Session user:', req.session.username);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request headers:', req.headers);
+    
+    // Ensure database connection
+    await connectDB();
     
     const lectureData = {
       subject: req.body.subject,
@@ -444,25 +450,29 @@ app.post('/lectures/save', requireAuth, async (req, res) => {
       isActive: req.body.isActive !== undefined ? req.body.isActive === 'true' : true
     };
 
-    console.log('Processed lecture data:', lectureData);
+    console.log('🔍 Processed lecture data:', JSON.stringify(lectureData, null, 2));
 
     if (req.body.id) {
       // Update existing lecture
+      console.log('🔍 Updating existing lecture with ID:', req.body.id);
       const result = await Lecture.findByIdAndUpdate(req.body.id, lectureData, { new: true });
-      console.log('Updated lecture:', result);
+      console.log('✅ Updated lecture:', result);
     } else {
       // Create new lecture
+      console.log('🔍 Creating new lecture...');
       const lecture = new Lecture(lectureData);
       const saved = await lecture.save();
-      console.log('Created new lecture:', saved);
+      console.log('✅ Created new lecture:', saved._id, saved.subject);
     }
 
+    console.log('🔍 Redirecting to /lectures with timestamp...');
     // Add cache-busting parameter to force refresh
     const timestamp = Date.now();
     res.redirect(`/lectures?updated=${timestamp}`);
   } catch (error) {
-    console.error('Save lecture error:', error.message);
-    console.error('Error details:', error);
+    console.error('❌ Save lecture error:', error.message);
+    console.error('❌ Error details:', error);
+    console.error('❌ Stack trace:', error.stack);
     res.redirect('/lectures?error=' + encodeURIComponent(error.message));
   }
 });

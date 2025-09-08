@@ -375,7 +375,9 @@ app.get('/lectures', requireAuth, async (req, res) => {
       title: 'Manage Lectures',
       lectures,
       teachers,
-      user: req.session.username
+      user: req.session.username,
+      error: req.query.error,
+      success: req.query.success
     });
   } catch (error) {
     console.error('Lectures error:', error.message);
@@ -424,14 +426,27 @@ app.get('/lectures/edit/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Save lecture
-app.post('/lectures/save', requireAuth, async (req, res) => {
+// Save lecture with enhanced error handling and session verification
+app.post('/lectures/save', async (req, res) => {
   const startTime = new Date();
   console.log('🔍 LECTURE SAVE ROUTE HIT at', startTime.toISOString());
-  console.log('🔍 Session user:', req.session.username);
+  console.log('🔍 Request method:', req.method);
+  console.log('🔍 Request URL:', req.url);
+  console.log('🔍 Session exists:', !!req.session);
   console.log('🔍 Session ID:', req.sessionID);
+  console.log('🔍 Session data:', JSON.stringify(req.session, null, 2));
+  
+  // Enhanced authentication check with detailed logging
+  if (!req.session || !req.session.isAuthenticated) {
+    console.log('❌ Authentication failed - redirecting to login');
+    console.log('   Session object:', req.session);
+    console.log('   IsAuthenticated:', req.session?.isAuthenticated);
+    return res.redirect('/login?error=session_expired');
+  }
+  
+  console.log('✅ Authentication passed - user:', req.session.username);
   console.log('🔍 Request body keys:', Object.keys(req.body));
-  console.log('🔍 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('🔍 Request body size:', JSON.stringify(req.body).length, 'bytes');
   
   try {
     // Validate required fields first
@@ -440,15 +455,31 @@ app.post('/lectures/save', requireAuth, async (req, res) => {
     
     if (missingFields.length > 0) {
       console.log('❌ Missing required fields:', missingFields);
+      console.log('   Available fields:', Object.keys(req.body));
       return res.redirect('/lectures?error=' + encodeURIComponent('Missing required fields: ' + missingFields.join(', ')));
     }
     
     console.log('✅ All required fields present');
     
-    // Ensure database connection
+    // Ensure database connection with retry logic
     console.log('🔍 Ensuring database connection...');
-    await connectDB();
-    console.log('✅ Database connected');
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        await connectDB();
+        console.log('✅ Database connected successfully');
+        break;
+      } catch (dbError) {
+        retryCount++;
+        console.log(`⚠️ Database connection attempt ${retryCount} failed:`, dbError.message);
+        if (retryCount >= maxRetries) {
+          throw new Error(`Database connection failed after ${maxRetries} attempts: ${dbError.message}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+      }
+    }
     
     const lectureData = {
       subject: req.body.subject,
@@ -489,21 +520,23 @@ app.post('/lectures/save', requireAuth, async (req, res) => {
       console.log('✅ Lecture verified in database:', verification.subject);
     } else {
       console.log('❌ Lecture NOT found in database after save!');
+      throw new Error('Lecture save verification failed');
     }
 
     const endTime = new Date();
     console.log('🔍 Total processing time:', endTime - startTime, 'ms');
-    console.log('🔍 Redirecting to /lectures with timestamp...');
+    console.log('🔍 Redirecting to /lectures with success message...');
     
-    // Add cache-busting parameter to force refresh
+    // Force a fresh page load with cache busting
     const timestamp = Date.now();
-    res.redirect(`/lectures?updated=${timestamp}&success=lecture_saved`);
+    res.redirect(`/lectures?success=lecture_saved&t=${timestamp}&id=${savedLecture._id}`);
   } catch (error) {
     console.error('❌ Save lecture error:', error.message);
     console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error name:', error.name);
     
-    // Send error details in redirect
-    const errorMsg = `${error.message} (${error.name})`;
+    // Send detailed error information
+    const errorMsg = `${error.message} (${error.name}) at ${new Date().toISOString()}`;
     res.redirect('/lectures?error=' + encodeURIComponent(errorMsg));
   }
 });

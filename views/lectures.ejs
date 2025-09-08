@@ -69,6 +69,28 @@
 
     <!-- Main Content -->
     <div class="container-fluid mt-4">
+        <!-- Error/Success Messages -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Success:</strong> 
+                <% if (success === 'lecture_saved') { %>
+                    Lecture has been saved successfully!
+                <% } else { %>
+                    <%= success %>
+                <% } %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
         <!-- Page Header -->
         <div class="row mb-4">
             <div class="col-12">

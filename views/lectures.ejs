@@ -367,20 +367,14 @@
     <script>
         // Initialize page functionality
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Lectures page DOMContentLoaded fired');
-            
             // Initialize lectures page functionality from admin.js
             if (typeof initializeLecturesPage === 'function') {
-                console.log('Calling initializeLecturesPage');
                 initializeLecturesPage();
-            } else {
-                console.error('initializeLecturesPage function not found');
             }
             
             // Update visible count
             function updateVisibleCount() {
                 const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
-                const totalRows = document.querySelectorAll('.lecture-row').length;
                 const visibleCountElement = document.getElementById('visibleCount');
                 if (visibleCountElement) {
                     visibleCountElement.textContent = visibleRows;
@@ -406,39 +400,6 @@
             
             // Initial count
             updateVisibleCount();
-            
-            // Clear all filters function
-            window.clearFilters = function() {
-                console.log('Clearing all filters');
-                document.getElementById('searchInput').value = '';
-                document.getElementById('dayFilter').value = '';
-                document.getElementById('semesterFilter').value = '';
-                document.getElementById('teacherFilter').value = '';
-                
-                // Trigger the filter function by dispatching input event
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) {
-                    searchInput.dispatchEvent(new Event('input'));
-                }
-            };
-            
-            // Bulk action functionality
-            document.addEventListener('change', function(e) {
-                if (e.target.classList.contains('lecture-checkbox') || e.target.id === 'selectAll') {
-                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
-                    const selectedCount = checkedBoxes.length;
-                    
-                    const selectedCountElement = document.getElementById('selectedCount');
-                    if (selectedCountElement) {
-                        selectedCountElement.textContent = selectedCount;
-                    }
-                    
-                    const bulkActionsRow = document.getElementById('bulkActionsRow');
-                    if (bulkActionsRow) {
-                        bulkActionsRow.style.display = selectedCount > 0 ? 'block' : 'none';
-                    }
-                }
-            });
         });
     </script>
 </body>

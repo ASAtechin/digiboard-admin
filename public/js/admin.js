@@ -309,8 +309,6 @@ function formatTime(time) {
 
 // Enhanced Lectures Page Functionality
 function initializeLecturesPage() {
-    console.log('initializeLecturesPage called');
-    
     const searchInput = document.getElementById('searchInput');
     const dayFilter = document.getElementById('dayFilter');
     const semesterFilter = document.getElementById('semesterFilter');
@@ -319,15 +317,10 @@ function initializeLecturesPage() {
     const bulkActionsRow = document.getElementById('bulkActionsRow');
     const selectedCountSpan = document.getElementById('selectedCount');
 
-    console.log('Elements found:', {
-        searchInput: !!searchInput,
-        dayFilter: !!dayFilter,
-        semesterFilter: !!semesterFilter,
-        teacherFilter: !!teacherFilter,
-        selectAllCheckbox: !!selectAllCheckbox,
-        bulkActionsRow: !!bulkActionsRow,
-        selectedCountSpan: !!selectedCountSpan
-    });
+    if (!searchInput) {
+        console.error('searchInput not found');
+        return;
+    }
 
     let selectedLectures = new Set();
 
@@ -375,23 +368,18 @@ function initializeLecturesPage() {
     }
 
     // Event listeners for filters
-    console.log('Setting up event listeners');
-    searchInput?.addEventListener('input', function() {
-        console.log('Search input event fired:', this.value);
-        filterLectures();
-    });
-    dayFilter?.addEventListener('change', function() {
-        console.log('Day filter event fired:', this.value);
-        filterLectures();
-    });
-    semesterFilter?.addEventListener('change', function() {
-        console.log('Semester filter event fired:', this.value);
-        filterLectures();
-    });
-    teacherFilter?.addEventListener('change', function() {
-        console.log('Teacher filter event fired:', this.value);
-        filterLectures();
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', filterLectures);
+    }
+    if (dayFilter) {
+        dayFilter.addEventListener('change', filterLectures);
+    }
+    if (semesterFilter) {
+        semesterFilter.addEventListener('change', filterLectures);
+    }
+    if (teacherFilter) {
+        teacherFilter.addEventListener('change', filterLectures);
+    }
 
     // Select all functionality
     selectAllCheckbox?.addEventListener('change', function() {

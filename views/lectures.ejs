@@ -372,6 +372,102 @@
                 initializeLecturesPage();
             }
             
+            // Fallback clearFilters function if not defined by admin.js
+            if (typeof window.clearFilters === 'undefined') {
+                window.clearFilters = function() {
+                    document.getElementById('searchInput').value = '';
+                    document.getElementById('dayFilter').value = '';
+                    document.getElementById('semesterFilter').value = '';
+                    document.getElementById('teacherFilter').value = '';
+                    
+                    // Show all rows
+                    document.querySelectorAll('.lecture-row').forEach(function(row) {
+                        row.style.display = '';
+                    });
+                    
+                    // Update count
+                    const visibleCountElement = document.getElementById('visibleCount');
+                    if (visibleCountElement) {
+                        const totalRows = document.querySelectorAll('.lecture-row').length;
+                        visibleCountElement.textContent = totalRows;
+                    }
+                };
+            }
+            
+            // Fallback clearSelection function if not defined by admin.js
+            if (typeof window.clearSelection === 'undefined') {
+                window.clearSelection = function() {
+                    document.querySelectorAll('.lecture-row input[type="checkbox"]').forEach(function(checkbox) {
+                        checkbox.checked = false;
+                    });
+                    
+                    const bulkActionsRow = document.getElementById('bulkActionsRow');
+                    if (bulkActionsRow) {
+                        bulkActionsRow.style.display = 'none';
+                    }
+                    
+                    const selectedCountElement = document.getElementById('selectedCount');
+                    if (selectedCountElement) {
+                        selectedCountElement.textContent = '0';
+                    }
+                };
+            }
+            
+            // Fallback bulk functions if not defined by admin.js
+            if (typeof window.bulkDelete === 'undefined') {
+                window.bulkDelete = function() {
+                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                    if (checkedBoxes.length === 0) {
+                        alert('Please select lectures to delete.');
+                        return;
+                    }
+                    
+                    if (confirm(`Are you sure you want to delete ${checkedBoxes.length} lecture(s)?`)) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/lectures/bulk-delete';
+                        
+                        checkedBoxes.forEach(checkbox => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'lectureIds[]';
+                            input.value = checkbox.value;
+                            form.appendChild(input);
+                        });
+                        
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                };
+            }
+            
+            if (typeof window.bulkToggleStatus === 'undefined') {
+                window.bulkToggleStatus = function() {
+                    const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
+                    if (checkedBoxes.length === 0) {
+                        alert('Please select lectures to toggle status.');
+                        return;
+                    }
+                    
+                    if (confirm(`Toggle status for ${checkedBoxes.length} lecture(s)?`)) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/lectures/bulk-toggle-status';
+                        
+                        checkedBoxes.forEach(checkbox => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'lectureIds[]';
+                            input.value = checkbox.value;
+                            form.appendChild(input);
+                        });
+                        
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                };
+            }
+            
             // Update visible count
             function updateVisibleCount() {
                 const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;

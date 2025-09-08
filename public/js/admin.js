@@ -488,6 +488,9 @@ function initializeLecturesPage() {
             form.submit();
         }
     };
+
+    // Initial setup
+    updateBulkActions();
 }
 
 function confirmAction(message, callback) {

@@ -108,75 +108,30 @@
             </div>
         </div>
 
-        <!-- Search and Filter -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fas fa-search"></i>
-                    </span>
-                    <input type="text" 
-                           class="form-control quick-search" 
-                           placeholder="Search lectures..." 
-                           data-target=".lecture-row">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <select class="form-select" id="dayFilter">
-                    <option value="">All Days</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <div class="text-end">
-                    <span class="text-muted">
-                        Total Lectures: <strong><%= lectures.length %></strong>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bulk Actions -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="d-none" id="bulkActionBtn">
-                    <form method="POST" action="/lectures/bulk-update" class="d-inline">
-                        <input type="hidden" name="lectureIds" id="selectedLectures">
-                        <div class="btn-group">
-                            <button type="submit" name="action" value="activate" class="btn btn-success btn-sm">
-                                <i class="fas fa-check me-1"></i>Activate Selected
-                            </button>
-                            <button type="submit" name="action" value="deactivate" class="btn btn-warning btn-sm">
-                                <i class="fas fa-pause me-1"></i>Deactivate Selected
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Enhanced Filters and Search -->
+        <!-- Filters, Search & Actions -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
                         <h6 class="card-title mb-0">
                             <i class="fas fa-filter me-2"></i>Filters & Search
                         </h6>
+                        <span class="text-muted">
+                            Total Lectures: <strong><%= lectures.length %></strong>
+                        </span>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-lg-4 col-md-6">
                                 <label class="form-label">Search</label>
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search subject, teacher, or room...">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search subject, teacher, or room...">
+                                </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-lg-2 col-md-3">
                                 <label class="form-label">Day</label>
                                 <select class="form-select" id="dayFilter">
                                     <option value="">All Days</option>
@@ -189,7 +144,7 @@
                                     <option value="Sunday">Sunday</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-lg-2 col-md-3">
                                 <label class="form-label">Semester</label>
                                 <select class="form-select" id="semesterFilter">
                                     <option value="">All Semesters</option>
@@ -199,7 +154,7 @@
                                     <option value="XII">XII</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-lg-2 col-md-6">
                                 <label class="form-label">Teacher</label>
                                 <select class="form-select" id="teacherFilter">
                                     <option value="">All Teachers</option>
@@ -208,14 +163,14 @@
                                     <% }); %>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-lg-2 col-md-6">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
-                                        <i class="fas fa-times me-1"></i>Clear
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()" title="Clear all filters">
+                                        <i class="fas fa-times"></i>
                                     </button>
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickLectureModal">
-                                        <i class="fas fa-plus me-1"></i>Add Lecture
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#quickLectureModal" title="Add new lecture">
+                                        <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
@@ -225,23 +180,24 @@
             </div>
         </div>
 
-        <!-- Bulk Actions -->
+        <!-- Bulk Actions Panel -->
         <div class="row mb-3" id="bulkActionsRow" style="display: none;">
             <div class="col-12">
-                <div class="alert alert-info d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span id="selectedCount">0</span> lecture(s) selected
+                <div class="alert alert-primary border-0 shadow-sm d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2 text-primary"></i>
+                        <strong><span id="selectedCount">0</span></strong>
+                        <span class="ms-1">lecture(s) selected</span>
                     </div>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="bulkDelete()">
-                            <i class="fas fa-trash me-1"></i>Delete Selected
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="bulkDelete()" title="Delete selected lectures">
+                            <i class="fas fa-trash me-1"></i>Delete
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-warning me-2" onclick="bulkToggleStatus()">
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="bulkToggleStatus()" title="Toggle status of selected lectures">
                             <i class="fas fa-toggle-on me-1"></i>Toggle Status
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
-                            <i class="fas fa-times me-1"></i>Clear Selection
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()" title="Clear selection">
+                            <i class="fas fa-times me-1"></i>Clear
                         </button>
                     </div>
                 </div>
@@ -249,24 +205,48 @@
         </div>
 
         <!-- Lectures Table -->
-        <div class="card">
-            <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Lectures List
+                    </h6>
+                    <small class="text-muted">
+                        <span id="visibleCount"><%= lectures.length %></span> of <%= lectures.length %> lectures
+                    </small>
+                </div>
+            </div>
+            <div class="card-body p-0">
                 <% if (lectures.length > 0) { %>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>
-                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="selectAll" class="form-check-input" title="Select all lectures">
                                     </th>
-                                    <th class="sortable">Subject</th>
-                                    <th class="sortable">Teacher</th>
-                                    <th class="sortable">Day</th>
-                                    <th class="sortable">Time</th>
-                                    <th>Classroom</th>
-                                    <th>Semester</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                                    <th class="sortable" style="min-width: 200px;">
+                                        <i class="fas fa-book me-1"></i>Subject
+                                    </th>
+                                    <th class="sortable" style="min-width: 150px;">
+                                        <i class="fas fa-user me-1"></i>Teacher
+                                    </th>
+                                    <th class="sortable" style="width: 100px;">
+                                        <i class="fas fa-calendar me-1"></i>Day
+                                    </th>
+                                    <th class="sortable" style="width: 120px;">
+                                        <i class="fas fa-clock me-1"></i>Time
+                                    </th>
+                                    <th style="width: 100px;">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Room
+                                    </th>
+                                    <th style="width: 80px;">
+                                        <i class="fas fa-graduation-cap me-1"></i>Sem
+                                    </th>
+                                    <th style="width: 80px;">
+                                        <i class="fas fa-toggle-on me-1"></i>Status
+                                    </th>
+                                    <th style="width: 120px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -275,8 +255,9 @@
                                         data-day="<%= lecture.dayOfWeek %>"
                                         data-semester="<%= lecture.semester || '' %>"
                                         data-teacher-id="<%= lecture.teacher ? lecture.teacher._id : '' %>"
-                                        data-subject="<%= lecture.subject %>"
-                                        data-classroom="<%= lecture.classroom %>">
+                                        data-teacher-name="<%= lecture.teacher ? lecture.teacher.name.toLowerCase() : '' %>"
+                                        data-subject="<%= lecture.subject.toLowerCase() %>"
+                                        data-classroom="<%= lecture.classroom.toLowerCase() %>">
                                         <td>
                                             <input type="checkbox" 
                                                    class="form-check-input lecture-checkbox" 
@@ -380,27 +361,107 @@
     <script src="/js/admin.js"></script>
     
     <script>
+        // Enhanced filter functionality with visible count update
+        function updateVisibleCount() {
+            const visibleRows = document.querySelectorAll('.lecture-row:not([style*="display: none"])').length;
+            document.getElementById('visibleCount').textContent = visibleRows;
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.lecture-row');
+            
+            rows.forEach(function(row) {
+                const subject = row.dataset.subject || '';
+                const teacherName = row.dataset.teacherName || '';
+                const classroom = row.dataset.classroom || '';
+                
+                const isVisible = subject.includes(searchTerm) || 
+                                teacherName.includes(searchTerm) || 
+                                classroom.includes(searchTerm);
+                
+                row.style.display = isVisible ? '' : 'none';
+            });
+            
+            updateVisibleCount();
+        });
+
         // Day filter functionality
         document.getElementById('dayFilter').addEventListener('change', function() {
             const selectedDay = this.value;
             const rows = document.querySelectorAll('.lecture-row');
             
             rows.forEach(function(row) {
-                if (selectedDay === '' || row.dataset.day === selectedDay) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+                const isVisible = selectedDay === '' || row.dataset.day === selectedDay;
+                row.style.display = isVisible ? '' : 'none';
             });
+            
+            updateVisibleCount();
         });
+
+        // Semester filter functionality
+        document.getElementById('semesterFilter').addEventListener('change', function() {
+            const selectedSemester = this.value;
+            const rows = document.querySelectorAll('.lecture-row');
+            
+            rows.forEach(function(row) {
+                const isVisible = selectedSemester === '' || row.dataset.semester === selectedSemester;
+                row.style.display = isVisible ? '' : 'none';
+            });
+            
+            updateVisibleCount();
+        });
+
+        // Teacher filter functionality
+        document.getElementById('teacherFilter').addEventListener('change', function() {
+            const selectedTeacher = this.value;
+            const rows = document.querySelectorAll('.lecture-row');
+            
+            rows.forEach(function(row) {
+                const isVisible = selectedTeacher === '' || row.getAttribute('data-teacher-id') === selectedTeacher;
+                row.style.display = isVisible ? '' : 'none';
+            });
+            
+            updateVisibleCount();
+        });
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dayFilter').value = '';
+            document.getElementById('semesterFilter').value = '';
+            document.getElementById('teacherFilter').value = '';
+            
+            document.querySelectorAll('.lecture-row').forEach(function(row) {
+                row.style.display = '';
+            });
+            
+            updateVisibleCount();
+        }
 
         // Update bulk action form with selected lecture IDs
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('lecture-checkbox') || e.target.id === 'selectAll') {
                 const checkedBoxes = document.querySelectorAll('.lecture-checkbox:checked');
                 const lectureIds = Array.from(checkedBoxes).map(cb => cb.value);
-                document.getElementById('selectedLectures').value = lectureIds.join(',');
+                
+                // Update selected count and show/hide bulk actions
+                const selectedCount = checkedBoxes.length;
+                document.getElementById('selectedCount').textContent = selectedCount;
+                
+                const bulkActionsRow = document.getElementById('bulkActionsRow');
+                if (selectedCount > 0) {
+                    bulkActionsRow.style.display = 'block';
+                } else {
+                    bulkActionsRow.style.display = 'none';
+                }
             }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVisibleCount();
         });
     </script>
 </body>

@@ -148,10 +148,13 @@
                                 <label class="form-label">Semester</label>
                                 <select class="form-select" id="semesterFilter">
                                     <option value="">All Semesters</option>
-                                    <option value="I">I</option>
-                                    <option value="II">II</option>
-                                    <option value="XI">XI</option>
-                                    <option value="XII">XII</option>
+                                    <% 
+                                    // Get unique semester values from lectures
+                                    const uniqueSemesters = [...new Set(lectures.map(lecture => lecture.semester).filter(Boolean))].sort();
+                                    uniqueSemesters.forEach(semester => { 
+                                    %>
+                                        <option value="<%= semester %>"><%= semester %></option>
+                                    <% }); %>
                                 </select>
                             </div>
                             <div class="col-lg-2 col-md-6">
@@ -257,7 +260,8 @@
                                         data-teacher-id="<%= lecture.teacher ? lecture.teacher._id : '' %>"
                                         data-teacher-name="<%= lecture.teacher ? lecture.teacher.name.toLowerCase() : '' %>"
                                         data-subject="<%= lecture.subject.toLowerCase() %>"
-                                        data-classroom="<%= lecture.classroom.toLowerCase() %>">
+                                        data-classroom="<%= lecture.classroom.toLowerCase() %>"
+                                        title="Semester: <%= lecture.semester || 'N/A' %>">
                                         <td>
                                             <input type="checkbox" 
                                                    class="form-check-input lecture-checkbox" 
@@ -405,8 +409,13 @@
             const selectedSemester = this.value;
             const rows = document.querySelectorAll('.lecture-row');
             
+            console.log('Semester filter:', selectedSemester); // Debug log
+            
             rows.forEach(function(row) {
-                const isVisible = selectedSemester === '' || row.dataset.semester === selectedSemester;
+                const rowSemester = row.getAttribute('data-semester') || '';
+                console.log('Row semester:', rowSemester, 'Selected:', selectedSemester); // Debug log
+                
+                const isVisible = selectedSemester === '' || rowSemester === selectedSemester;
                 row.style.display = isVisible ? '' : 'none';
             });
             

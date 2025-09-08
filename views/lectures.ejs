@@ -264,14 +264,19 @@
                                     <th class="sortable">Day</th>
                                     <th class="sortable">Time</th>
                                     <th>Classroom</th>
-                                    <th>Type</th>
+                                    <th>Semester</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% lectures.forEach(function(lecture) { %>
-                                    <tr class="lecture-row" data-day="<%= lecture.dayOfWeek %>">
+                                    <tr class="lecture-row" 
+                                        data-day="<%= lecture.dayOfWeek %>"
+                                        data-semester="<%= lecture.semester || '' %>"
+                                        data-teacher-id="<%= lecture.teacher ? lecture.teacher._id : '' %>"
+                                        data-subject="<%= lecture.subject %>"
+                                        data-classroom="<%= lecture.classroom %>">
                                         <td>
                                             <input type="checkbox" 
                                                    class="form-check-input lecture-checkbox" 
@@ -309,8 +314,8 @@
                                             <%= lecture.classroom %>
                                         </td>
                                         <td>
-                                            <span class="badge bg-<%= lecture.lectureType === 'Lab' ? 'warning' : lecture.lectureType === 'Tutorial' ? 'info' : lecture.lectureType === 'Seminar' ? 'success' : 'primary' %>">
-                                                <%= lecture.lectureType %>
+                                            <span class="badge bg-secondary">
+                                                <%= lecture.semester || 'N/A' %>
                                             </span>
                                         </td>
                                         <td>

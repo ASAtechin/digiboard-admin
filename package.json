@@ -7,10 +7,14 @@
     "start": "NODE_ENV=production node server.js",
     "dev": "NODE_ENV=development nodemon server.js",
     "build": "echo 'Production build completed'",
-    "test": "echo 'Tests will be implemented soon'",
-    "deploy": "vercel --prod",
-    "deploy-dev": "vercel",
-    "clean": "rm -rf node_modules package-lock.json && npm install"
+    "test": "cd tests && npm test",
+    "test:unit": "cd tests && npm run test:unit",
+    "test:integration": "cd tests && npm run test:integration",
+    "deploy": "vercel --prod --local-config=config/vercel.json",
+    "deploy-dev": "vercel --local-config=config/vercel.json",
+    "deploy-railway": "railway up",
+    "clean": "rm -rf node_modules package-lock.json && npm install",
+    "structure": "tree -I 'node_modules|.git' -a"
   },
   "keywords": [
     "digiboard",

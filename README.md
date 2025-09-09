@@ -6,6 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18-blue.svg)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green.svg)](https://www.mongodb.com/)
+[![Tests](https://img.shields.io/badge/Tests-Comprehensive-brightgreen.svg)](#testing)
 
 ## 🚀 **Live Demo**
 **Production URL:** [https://digiboard-admin.vercel.app](https://digiboard-admin-706w9h1hc-adityas-projects-dbc75222.vercel.app)
@@ -16,18 +17,39 @@
 
 ---
 
+## � **Project Structure**
+
+```
+digiboard-admin/
+├── 📂 config/          # Configuration files
+├── 📂 docs/            # Documentation
+├── 📂 models/          # Database models
+├── 📂 public/          # Static assets
+├── 📂 scripts/         # Utility scripts
+├── 📂 tests/           # Testing framework
+├── 📂 utils/           # Helper utilities
+├── 📂 views/           # EJS templates
+└── 📄 server.js        # Main application
+```
+
+> **📖 Complete structure guide:** [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
+
+---
+
 ## 📋 **Features**
 
-### 🎯 **Core Management**
-- ✅ **Teacher Management** - Add, edit, delete teacher profiles with complete information
-- ✅ **Lecture Scheduling** - Comprehensive lecture planning and organization
-- ✅ **Schedule Overview** - Daily and weekly schedule visualization
-- ✅ **Quick Updates** - Rapid schedule modifications and emergency changes
+### 🎯 **Enhanced Schedule Management**
+- ✅ **Advanced Filtering** - Date, day, and week-based schedule views
+- ✅ **Responsive Design** - Mobile-first, modern UI with three-tab interface
+- ✅ **Real-time Updates** - Live schedule modifications and conflict detection
+- ✅ **Teacher Management** - Complete teacher profile and contact management
+- ✅ **Lecture Scheduling** - Comprehensive lecture planning with time validation
 
 ### 📊 **Dashboard Analytics**
 - ✅ **Real-time Statistics** - Teacher count, lecture metrics, active schedules
 - ✅ **Next Lecture Display** - Immediate upcoming lecture information
-- ✅ **Status Monitoring** - Active/inactive lecture tracking
+- ✅ **Performance Monitoring** - System health and usage analytics
+- ✅ **Status Tracking** - Active/inactive lecture and teacher status
 
 ### ⚡ **Quick Actions**
 - ✅ **Bulk Operations** - Mass lecture activation/deactivation

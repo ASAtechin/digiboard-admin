@@ -310,6 +310,89 @@
                 </div>
             </div>
         </div>
+
+        <!-- Today's Schedule -->
+        <% if (stats.todaySchedule && stats.todaySchedule.length > 0) { %>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0">
+                    <div class="card-header bg-transparent">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-day me-2 text-success"></i>
+                            Today's Schedule
+                            <small class="text-muted ms-2">(<%= moment().format('dddd, MMMM Do YYYY') %>)</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <% stats.todaySchedule.forEach((lecture, index) => { %>
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100 border-start border-4 border-<%= lecture.lectureType === 'Lab' ? 'warning' : lecture.lectureType === 'Tutorial' ? 'info' : 'primary' %>">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-0 text-primary">
+                                                    <%= lecture.subject %>
+                                                </h6>
+                                                <span class="badge bg-<%= lecture.lectureType === 'Lab' ? 'warning' : lecture.lectureType === 'Tutorial' ? 'info' : 'primary' %> text-dark">
+                                                    <%= lecture.lectureType %>
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="small text-muted mb-2">
+                                                <div class="mb-1">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    <%= lecture.teacher?.name || 'TBA' %>
+                                                </div>
+                                                <div class="mb-1">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    <%= moment(lecture.startTime).format('h:mm A') %> - <%= moment(lecture.endTime).format('h:mm A') %>
+                                                </div>
+                                                <div class="mb-1">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                                    Room <%= lecture.classroom %>
+                                                </div>
+                                                <% if (lecture.semester) { %>
+                                                <div class="mb-1">
+                                                    <i class="fas fa-graduation-cap me-1"></i>
+                                                    <%= lecture.semester %>
+                                                </div>
+                                                <% } %>
+                                                <% if (lecture.chapter) { %>
+                                                <div>
+                                                    <i class="fas fa-bookmark me-1"></i>
+                                                    Ch: <%= lecture.chapter %>
+                                                </div>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/schedule" class="btn btn-outline-primary">
+                                <i class="fas fa-calendar me-1"></i>
+                                View Full Schedule
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } else { %>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-calendar-times fa-2x text-muted mb-3"></i>
+                        <h6 class="text-muted">No lectures scheduled for today</h6>
+                        <p class="text-muted small mb-0">Enjoy your free day!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
     </div>
 
     <!-- Footer -->

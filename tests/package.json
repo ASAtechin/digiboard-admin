@@ -1,0 +1,30 @@
+{
+  "name": "digiboard-tests",
+  "version": "1.0.0",
+  "description": "Testing suite for DigiBoard platform",
+  "main": "test-setup.js",
+  "scripts": {
+    "test": "mocha --require ./test-setup.js --recursive unit integration schedule --reporter spec --timeout 10000",
+    "test:unit": "mocha --require ./test-setup.js unit/**/*.js --reporter spec",
+    "test:integration": "mocha --require ./test-setup.js integration/**/*.js --reporter spec",
+    "test:schedule": "mocha --require ./test-setup.js schedule/**/*.js --reporter spec",
+    "test:coverage": "nyc npm test",
+    "test:watch": "mocha --require ./test-setup.js --recursive unit integration schedule --watch"
+  },
+  "dependencies": {
+    "mocha": "^10.2.0",
+    "chai": "^4.3.8",
+    "sinon": "^17.0.1",
+    "supertest": "^6.3.3",
+    "nyc": "^15.1.0",
+    "mochawesome": "^7.1.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "express-session": "^1.17.3",
+    "moment": "^2.29.4"
+  },
+  "devDependencies": {},
+  "keywords": ["testing", "digiboard", "schedule", "automation"],
+  "author": "DigiBoard Team",
+  "license": "MIT"
+}

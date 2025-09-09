@@ -442,49 +442,67 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     console.log(`Dashboard data: ${teachers.length} teachers, ${lectures.length} lectures`);
 
-    // Get next lecture
+    // Get next lecture - improved logic
     const now = new Date();
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-    const currentTime = now.toTimeString().slice(0, 8);
+    const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-    console.log(`Current day: ${currentDay}, Current time: ${currentTime}`);
+    console.log(`Current day: ${currentDay}, Current time: ${now.toTimeString().slice(0, 8)}`);
 
-    let nextLecture = await Lecture.findOne({
-      dayOfWeek: currentDay,
-      isActive: true,
-      $expr: {
-        $gt: [
-          { $dateToString: { format: "%H:%M:%S", date: "$startTime" } },
-          currentTime
-        ]
-      }
-    })
-    .populate('teacher', 'name email department office profileImage phone qualifications experience')
-    .sort({ startTime: 1 });
+    // Find next lecture today first
+    let nextLecture = null;
+    const todayLectures = lectures.filter(l => 
+      l.dayOfWeek === currentDay && 
+      l.isActive && 
+      l.startTime
+    );
 
-    // If no lecture today, find next lecture this week
-    if (!nextLecture) {
-      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const currentDayIndex = daysOfWeek.indexOf(currentDay);
-      const nextDays = daysOfWeek.slice(currentDayIndex + 1).concat(daysOfWeek.slice(0, currentDayIndex + 1));
-
-      for (const day of nextDays) {
-        nextLecture = await Lecture.findOne({
-          dayOfWeek: day,
-          isActive: true
-        })
-        .populate('teacher', 'name email department office profileImage phone qualifications experience')
-        .sort({ startTime: 1 });
-
-        if (nextLecture) break;
+    for (const lecture of todayLectures) {
+      const lectureTime = new Date(lecture.startTime);
+      const lectureSeconds = lectureTime.getHours() * 3600 + lectureTime.getMinutes() * 60 + lectureTime.getSeconds();
+      
+      if (lectureSeconds > currentTime) {
+        nextLecture = lecture;
+        break;
       }
     }
+
+    // If no lecture today, find next lecture this week
+    if (!nextLecture && lectures.length > 0) {
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const currentDayIndex = daysOfWeek.indexOf(currentDay);
+      
+      // Check remaining days this week
+      for (let i = 1; i <= 7; i++) {
+        const dayIndex = (currentDayIndex + i) % 7;
+        const dayName = daysOfWeek[dayIndex];
+        
+        const dayLectures = lectures.filter(l => 
+          l.dayOfWeek === dayName && 
+          l.isActive
+        ).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        
+        if (dayLectures.length > 0) {
+          nextLecture = dayLectures[0];
+          break;
+        }
+      }
+    }
+
+    console.log(`Next lecture found: ${nextLecture ? nextLecture.subject : 'None'}`);
+
+    // Get today's schedule
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    const todaySchedule = lectures.filter(l => l.dayOfWeek === today && l.isActive)
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     const stats = {
       totalTeachers: teachers.length,
       totalLectures: lectures.length,
       activeLectures: lectures.filter(l => l.isActive).length,
-      nextLecture: nextLecture
+      nextLecture: nextLecture,
+      todaySchedule: todaySchedule,
+      today: today
     };
 
     res.render('dashboard', { 
@@ -861,14 +879,39 @@ app.post('/lectures/delete/:id', requireAuth, async (req, res) => {
 // Schedule management
 app.get('/schedule', requireAuth, async (req, res) => {
   try {
-    // Get all lectures with populated teacher data for today and this week
-    const allLectures = await Lecture.find().populate('teacher').sort({ day: 1, startTime: 1 });
+    // Get filter parameters
+    const { date, week, day } = req.query;
+    
+    // Get all lectures with populated teacher data
+    const allLectures = await Lecture.find({ isActive: true })
+      .populate('teacher', 'name email department office phone')
+      .sort({ dayOfWeek: 1, startTime: 1 });
+    
+    console.log(`Found ${allLectures.length} active lectures for schedule`);
     
     // Get today's day name
+    let targetDate = date ? new Date(date) : new Date();
+    let targetDay = day || targetDate.toLocaleDateString('en-US', { weekday: 'long' });
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
     
-    // Filter today's lectures
-    const todaySchedule = allLectures.filter(lecture => lecture.day === today);
+    // Filter lectures based on parameters
+    let filteredLectures = allLectures;
+    let todaySchedule = [];
+    
+    if (date) {
+      // Filter by specific date
+      targetDay = targetDate.toLocaleDateString('en-US', { weekday: 'long' });
+      todaySchedule = allLectures.filter(lecture => lecture.dayOfWeek === targetDay);
+      console.log(`Filtering by date ${date} (${targetDay}): found ${todaySchedule.length} lectures`);
+    } else if (day) {
+      // Filter by specific day
+      todaySchedule = allLectures.filter(lecture => lecture.dayOfWeek === day);
+      console.log(`Filtering by day ${day}: found ${todaySchedule.length} lectures`);
+    } else {
+      // Default to today's schedule
+      todaySchedule = allLectures.filter(lecture => lecture.dayOfWeek === today);
+      console.log(`Today is ${today}, found ${todaySchedule.length} lectures`);
+    }
     
     // Group weekly schedule by day
     const weeklySchedule = {
@@ -882,21 +925,76 @@ app.get('/schedule', requireAuth, async (req, res) => {
     };
     
     allLectures.forEach(lecture => {
-      if (weeklySchedule[lecture.day]) {
-        weeklySchedule[lecture.day].push(lecture);
+      if (weeklySchedule[lecture.dayOfWeek]) {
+        weeklySchedule[lecture.dayOfWeek].push(lecture);
       }
     });
+
+    // Get next upcoming lecture
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const currentTime = now.toTimeString().slice(0, 8);
+
+    let nextLecture = await Lecture.findOne({
+      dayOfWeek: currentDay,
+      isActive: true,
+      $expr: {
+        $gt: [
+          { $dateToString: { format: "%H:%M:%S", date: "$startTime" } },
+          currentTime
+        ]
+      }
+    })
+    .populate('teacher', 'name email department office phone')
+    .sort({ startTime: 1 });
+
+    // If no lecture today, find next lecture this week
+    if (!nextLecture) {
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const currentDayIndex = daysOfWeek.indexOf(currentDay);
+      const nextDays = daysOfWeek.slice(currentDayIndex + 1).concat(daysOfWeek.slice(0, currentDayIndex + 1));
+
+      for (const day of nextDays) {
+        nextLecture = await Lecture.findOne({
+          dayOfWeek: day,
+          isActive: true
+        })
+        .populate('teacher', 'name email department office phone')
+        .sort({ startTime: 1 });
+
+        if (nextLecture) break;
+      }
+    }
 
     res.render('schedule', { 
       weeklySchedule,
       todaySchedule,
+      nextLecture,
+      today,
+      targetDay: targetDay || today,
+      selectedDate: date || '',
+      selectedDay: day || '',
+      totalLectures: allLectures.length,
+      activeLectures: allLectures.length,
+      daysOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       user: req.session.username 
     });
   } catch (error) {
     console.error('Schedule error:', error.message);
     res.render('schedule', { 
-      weeklySchedule: {},
+      weeklySchedule: {
+        Monday: [], Tuesday: [], Wednesday: [], Thursday: [],
+        Friday: [], Saturday: [], Sunday: []
+      },
       todaySchedule: [],
+      nextLecture: null,
+      today: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+      targetDay: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+      selectedDate: '',
+      selectedDay: '',
+      totalLectures: 0,
+      activeLectures: 0,
+      daysOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       user: req.session.username,
       error: 'Failed to load schedule'
     });
